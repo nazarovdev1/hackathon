@@ -48,8 +48,8 @@ export function calculateKPI(data: KPIData, academicPercent: number): KPIResult 
   const mainKPI = academic + attendance + assignment + activity + tutor + discipline;
   const finalScore = mainKPI - penalty + recovery + employmentBonus;
 
-  let grantStatus = GrantStatus.ELIGIBLE;
-  let riskLevel = RiskLevel.LOW;
+  let grantStatus: GrantStatus = GrantStatus.ELIGIBLE;
+  let riskLevel: RiskLevel = RiskLevel.LOW;
 
   // Determine Grant Status
   if (academicPercent < 80) {

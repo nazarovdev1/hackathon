@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import type { StudentAnalytics } from "@/services/mock-data";
+import type { StudentDashboardSnapshot } from "@/types/grant";
+import { uploadAchievement } from "@/actions/grant-actions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,17 +12,20 @@ import { Award, Upload, CheckCircle2, Clock, AlertCircle, FileText, PlusCircle }
 import { MotionPanel } from "@/components/providers/motion-panel";
 
 type Achievement = {
+  id?: string;
   title: string;
   score: number;
   category: string;
-  status: "APPROVED" | "PENDING";
+  status: "APPROVED" | "PENDING" | "REJECTED";
   dateAdded: string;
 };
 
-export function CertificatesClient({ student }: { student: StudentAnalytics }) {
+type AchievementType = "ACADEMIC" | "INNOVATION" | "LANGUAGE" | "SOCIAL" | "SPORT";
+
+export function CertificatesClient({ student }: { student: StudentDashboardSnapshot }) {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("Academic");
+  const [category, setCategory] = useState<AchievementType>("ACADEMIC");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -30,11 +34,12 @@ export function CertificatesClient({ student }: { student: StudentAnalytics }) {
   useEffect(() => {
     if (student) {
       const initial = student.achievements.map((item) => ({
+        id: item.id,
         title: item.title,
         score: item.score,
         category: item.category,
-        status: "APPROVED" as const,
-        dateAdded: "2026-04-10",
+        status: item.status,
+        dateAdded: item.dateAdded,
       }));
       setAchievements(initial);
     }
@@ -46,17 +51,22 @@ export function CertificatesClient({ student }: { student: StudentAnalytics }) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
     setIsSubmitting(true);
     setToastMessage(null);
 
-    // Simulate server request delay
-    setTimeout(() => {
-      const newAchievement: Achievement = {
+    try {
+      const created = await uploadAchievement({
         title,
+        type: category,
+        proofUrl: selectedFile ? `/uploads/${selectedFile.name}` : undefined,
+      });
+      const newAchievement: Achievement = {
+        id: created.id,
+        title: created.title,
         category,
         score: 0, // Pending evaluation
         status: "PENDING",
@@ -65,14 +75,17 @@ export function CertificatesClient({ student }: { student: StudentAnalytics }) {
 
       setAchievements((prev) => [newAchievement, ...prev]);
       setTitle("");
-      setCategory("Academic");
+      setCategory("ACADEMIC");
       setSelectedFile(null);
       setIsSubmitting(false);
       setToastMessage("Sertifikat muvaffaqiyatli yuklandi! Hozirda ko'rib chiqilmoqda.");
       
       // Clear toast after 4 seconds
       setTimeout(() => setToastMessage(null), 4000);
-    }, 1200);
+    } catch {
+      setIsSubmitting(false);
+      setToastMessage("Sertifikatni yuklashda xatolik yuz berdi.");
+    }
   };
 
   // Calculate sum of approved scores
@@ -125,15 +138,15 @@ export function CertificatesClient({ student }: { student: StudentAnalytics }) {
                   <select
                     id="category"
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={(e) => setCategory(e.target.value as AchievementType)}
                     className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={isSubmitting}
                   >
-                    <option value="Academic">Akademik faoliyat (Maqola, olimpiada)</option>
-                    <option value="Innovation">Innovatsiya & Loyihalar (Hackathon, startap)</option>
-                    <option value="Language">Chet tillari (IELTS, CEFR)</option>
-                    <option value="Social">Ijtimoiy faoliyat (Volontyorlik)</option>
-                    <option value="Sport">Sport yutuqlari</option>
+                    <option value="ACADEMIC">Akademik faoliyat (Maqola, olimpiada)</option>
+                    <option value="INNOVATION">Innovatsiya & Loyihalar (Hackathon, startap)</option>
+                    <option value="LANGUAGE">Chet tillari (IELTS, CEFR)</option>
+                    <option value="SOCIAL">Ijtimoiy faoliyat (Volontyorlik)</option>
+                    <option value="SPORT">Sport yutuqlari</option>
                   </select>
                 </div>
 

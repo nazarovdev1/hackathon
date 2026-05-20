@@ -3,24 +3,43 @@ import { getToken } from "next-auth/jwt";
 import { authSecret } from "@/constants/auth";
 import type { AppRole } from "@/types/auth";
 
-const routeRoles: Record<string, AppRole[]> = {
-  "/dashboard/student": ["STUDENT", "ADMIN"],
-  "/dashboard/admin": ["ADMIN"],
-  "/dashboard/mentor": ["MENTOR", "TUTOR", "ADMIN"],
-};
-
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const protectedEntry = Object.entries(routeRoles).find(([route]) => pathname.startsWith(route));
 
-  if (!protectedEntry) return NextResponse.next();
-
+  // 1. Force authentication for any path under /dashboard
   const token = await getToken({ req: request, secret: authSecret });
-  if (!token) return NextResponse.redirect(new URL("/", request.url));
+  if (!token) {
+    // Redirect to home/login page if not authenticated
+    return NextResponse.redirect(new URL("/", request.url));
+  }
 
-  const [, roles] = protectedEntry;
-  if (!roles.includes(token.role as AppRole)) {
-    return NextResponse.redirect(new URL("/unauthorized", request.url));
+  const role = token.role as AppRole;
+
+  // 2. Enforce Role-Based Access Control (RBAC)
+  if (pathname.startsWith("/dashboard/admin")) {
+    if (role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
+    }
+  } else if (pathname.startsWith("/dashboard/mentor")) {
+    if (role !== "MENTOR" && role !== "TUTOR" && role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
+    }
+  } else if (pathname.startsWith("/dashboard/student")) {
+    if (role !== "STUDENT" && role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
+    }
+  } else if (pathname.startsWith("/dashboard/settings")) {
+    // Settings accessible to all authenticated users
+  } else {
+    // Generic paths like /dashboard or any unmapped /dashboard/* routes
+    // Redirect the user to their default dashboard homepage based on their role
+    if (role === "ADMIN") {
+      return NextResponse.redirect(new URL("/dashboard/admin", request.url));
+    } else if (role === "MENTOR" || role === "TUTOR") {
+      return NextResponse.redirect(new URL("/dashboard/mentor", request.url));
+    } else {
+      return NextResponse.redirect(new URL("/dashboard/student", request.url));
+    }
   }
 
   return NextResponse.next();

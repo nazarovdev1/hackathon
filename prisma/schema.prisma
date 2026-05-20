@@ -19,18 +19,23 @@ enum GrantStatus {
   DENIED
 }
 
+enum DecisionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum RiskLevel {
   LOW
   MEDIUM
   HIGH
 }
 
-enum ActivityType {
-  RESEARCH
-  VOLUNTEERING
-  COMPETITION
-  LEADERSHIP
-  INNOVATION
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
 }
 
 enum AssignmentStatus {
@@ -40,6 +45,39 @@ enum AssignmentStatus {
   MISSED
 }
 
+enum AchievementType {
+  ACADEMIC
+  INNOVATION
+  LANGUAGE
+  SOCIAL
+  SPORT
+  LEADERSHIP
+  RESEARCH
+  COMPETITION
+  VOLUNTEERING
+}
+
+enum RecordStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PenaltyType {
+  ATTENDANCE
+  ASSIGNMENT
+  DISCIPLINE
+  ACADEMIC
+  OTHER
+}
+
+enum RecoveryStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
 enum EmploymentType {
   INTERNSHIP
   PART_TIME
@@ -47,167 +85,264 @@ enum EmploymentType {
   RESEARCH_ASSISTANT
 }
 
+enum EmploymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ACTIVE
+  COMPLETED
+}
+
+enum FeedbackType {
+  ASSIGNMENT
+  ACTIVITY
+  TUTOR
+  DISCIPLINE
+  GENERAL
+}
+
 model User {
-  id            String          @id @default(cuid())
-  email         String          @unique
-  fullName      String
-  imageUrl      String?
-  role          Role            @default(STUDENT)
-  isActive      Boolean         @default(true)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  student       StudentProfile?
-  mentorGroups  StudentProfile[] @relation("MentorStudents")
-  feedbacks     Feedback[]       @relation("FeedbackAuthor")
+  id                     String           @id @default(cuid())
+  fullName               String
+  email                  String           @unique
+  phone                  String?
+  passwordHash           String
+  role                   Role             @default(STUDENT)
+  avatarUrl              String?
+  externalId             String?          @unique
+  isActive               Boolean          @default(true)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  studentProfile         StudentProfile?
+  mentorProfile          MentorProfile?
+  tutorProfile           TutorProfile?
+  mentorStudents         StudentProfile[] @relation("MentorStudents")
+  tutorStudents          StudentProfile[] @relation("TutorStudents")
+  approvedAchievements   Achievement[]    @relation("AchievementApprover")
+  createdPenalties       Penalty[]        @relation("PenaltyCreator")
+  assignedRecoveryTasks  RecoveryTask[]   @relation("RecoveryAssigner")
+  authoredFeedbacks      Feedback[]       @relation("FeedbackAuthor")
+  approvedGrantDecisions GrantDecision[]  @relation("GrantDecisionApprover")
 
   @@index([role, isActive])
 }
 
 model StudentProfile {
-  id                  String          @id @default(cuid())
-  userId              String          @unique
-  mentorId            String?
-  studentCode         String          @unique
-  faculty             String
-  department          String
-  groupName           String
-  enrollmentYear      Int
-  currentGrantStatus  GrantStatus     @default(RISK)
-  currentRiskLevel    RiskLevel       @default(MEDIUM)
-  leaderboardPosition Int?
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mentor              User?           @relation("MentorStudents", fields: [mentorId], references: [id])
-  academicScores      AcademicScore[]
-  attendances         Attendance[]
-  assignments         Assignment[]
-  activities          Activity[]
-  penalties           Penalty[]
-  recoveries          Recovery[]
-  employments         Employment[]
-  feedbacks           Feedback[]
-  achievements        Achievement[]
+  id                String             @id @default(cuid())
+  userId            String             @unique
+  mentorId          String?
+  tutorId           String?
+  studentId         String             @unique
+  groupName         String
+  faculty           String
+  level             String
+  grantType         String
+  currentGpaPercent Decimal            @default(0) @db.Decimal(5, 2)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mentor            User?              @relation("MentorStudents", fields: [mentorId], references: [id], onDelete: SetNull)
+  tutor             User?              @relation("TutorStudents", fields: [tutorId], references: [id], onDelete: SetNull)
+  scoreRecords      ScoreRecord[]
+  attendanceRecords AttendanceRecord[]
+  assignmentRecords AssignmentRecord[]
+  achievements      Achievement[]
+  penalties         Penalty[]
+  recoveryTasks     RecoveryTask[]
+  employments       Employment[]
+  feedbacks         Feedback[]
+  grantDecisions    GrantDecision[]
 
-  @@index([faculty, department, groupName])
-  @@index([currentGrantStatus, currentRiskLevel])
+  @@index([faculty, groupName])
+  @@index([mentorId])
+  @@index([tutorId])
 }
 
-model AcademicScore {
-  id             String         @id @default(cuid())
-  studentId      String
-  semester       Int
-  subject        String
-  credits        Int
-  percent        Decimal        @db.Decimal(5, 2)
-  weightedScore  Decimal        @db.Decimal(5, 2)
-  recordedAt     DateTime       @default(now())
-  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@index([studentId, semester])
+model MentorProfile {
+  id         String @id @default(cuid())
+  userId     String @unique
+  department String
+  specialty  String
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Attendance {
-  id          String         @id @default(cuid())
-  studentId   String
-  month       DateTime
-  totalHours  Int
-  presentHours Int
-  percent     Decimal        @db.Decimal(5, 2)
-  score       Decimal        @db.Decimal(5, 2)
-  student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, month])
+model TutorProfile {
+  id            String @id @default(cuid())
+  userId        String @unique
+  assignedGroup String
+  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Assignment {
-  id          String           @id @default(cuid())
-  studentId   String
-  title       String
-  subject     String
-  status      AssignmentStatus @default(PENDING)
-  dueDate     DateTime
-  submittedAt DateTime?
-  score       Decimal          @db.Decimal(5, 2)
-  student     StudentProfile   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+model ScoreRecord {
+  id              String         @id @default(cuid())
+  studentId       String
+  semester        String
+  academicPercent Decimal        @db.Decimal(5, 2)
+  academicScore   Decimal        @db.Decimal(5, 2)
+  attendanceScore Decimal        @db.Decimal(5, 2)
+  assignmentScore Decimal        @db.Decimal(5, 2)
+  activityScore   Decimal        @db.Decimal(5, 2)
+  tutorScore      Decimal        @db.Decimal(5, 2)
+  disciplineScore Decimal        @db.Decimal(5, 2)
+  mainKpi         Decimal        @db.Decimal(5, 2)
+  penaltyScore    Decimal        @db.Decimal(5, 2)
+  recoveryScore   Decimal        @db.Decimal(5, 2)
+  employmentBonus Decimal        @db.Decimal(5, 2)
+  finalScore      Decimal        @db.Decimal(5, 2)
+  riskLevel       RiskLevel
+  grantStatus     GrantStatus
+  calculatedAt    DateTime       @default(now())
+  student         StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, semester])
+  @@index([grantStatus, riskLevel])
+  @@index([finalScore])
+}
+
+model AttendanceRecord {
+  id        String           @id @default(cuid())
+  studentId String
+  date      DateTime
+  time      String?
+  status    AttendanceStatus
+  subject   String?
+  subjectId String?
+  reason    String?
+  note      String?
+  student   StudentProfile   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectRef Subject?        @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([studentId, date])
+  @@index([status])
+  @@index([subjectId])
+}
+
+model Subject {
+  id                String             @id @default(cuid())
+  subjectId         String             @unique
+  name              String
+  teacher           String
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  attendanceRecords AttendanceRecord[]
+
+  @@index([teacher])
+}
+
+model AssignmentRecord {
+  id              String           @id @default(cuid())
+  studentId       String
+  subject         String
+  title           String
+  score           Decimal          @db.Decimal(5, 2)
+  status          AssignmentStatus @default(PENDING)
+  submittedOnTime Boolean          @default(false)
+  isOriginal      Boolean          @default(true)
+  qualityNote     String?
+  deadline        DateTime
+  submittedAt     DateTime?
+  student         StudentProfile   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([studentId, status])
+  @@index([deadline])
 }
 
-model Activity {
-  id          String         @id @default(cuid())
-  studentId   String
-  title       String
-  type        ActivityType
-  score       Decimal        @db.Decimal(5, 2)
-  verifiedAt  DateTime?
-  createdAt   DateTime       @default(now())
-  student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+model Achievement {
+  id           String          @id @default(cuid())
+  studentId    String
+  approvedById String?
+  type         AchievementType
+  title        String
+  description  String?
+  score        Decimal         @db.Decimal(5, 2)
+  status       RecordStatus    @default(PENDING)
+  proofUrl     String?
+  createdAt    DateTime        @default(now())
+  student      StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  approvedBy   User?           @relation("AchievementApprover", fields: [approvedById], references: [id], onDelete: SetNull)
 
-  @@index([studentId, type])
+  @@index([studentId, status])
+  @@index([approvedById])
 }
 
 model Penalty {
   id          String         @id @default(cuid())
   studentId   String
+  createdById String
+  type        PenaltyType
   reason      String
   score       Decimal        @db.Decimal(5, 2)
-  issuedAt    DateTime       @default(now())
-  resolvedAt  DateTime?
+  createdAt   DateTime       @default(now())
   student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdBy   User           @relation("PenaltyCreator", fields: [createdById], references: [id])
 
-  @@index([studentId, issuedAt])
+  @@index([studentId, createdAt])
+  @@index([createdById])
 }
 
-model Recovery {
-  id          String         @id @default(cuid())
-  studentId   String
-  title       String
-  progress    Int            @default(0)
-  score       Decimal        @db.Decimal(5, 2)
-  startedAt   DateTime       @default(now())
-  completedAt DateTime?
-  student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+model RecoveryTask {
+  id            String         @id @default(cuid())
+  studentId     String
+  assignedById  String
+  title         String
+  description   String?
+  recoveryScore Decimal        @db.Decimal(5, 2)
+  status        RecoveryStatus @default(ASSIGNED)
+  deadline      DateTime
+  completedAt   DateTime?
+  student       StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignedBy    User           @relation("RecoveryAssigner", fields: [assignedById], references: [id])
 
-  @@index([studentId, progress])
+  @@index([studentId, status])
+  @@index([assignedById])
+  @@index([deadline])
 }
 
 model Employment {
-  id          String         @id @default(cuid())
+  id          String           @id @default(cuid())
   studentId   String
-  company     String
-  position    String
   type        EmploymentType
-  bonusScore  Decimal        @db.Decimal(5, 2)
-  startedAt   DateTime
-  endedAt     DateTime?
-  verifiedAt  DateTime?
-  student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  companyName String
+  position    String
+  bonusScore  Decimal          @db.Decimal(5, 2)
+  proofUrl    String?
+  status      EmploymentStatus @default(PENDING)
+  student     StudentProfile   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  @@index([studentId, type])
+  @@index([studentId, status])
+  @@index([type])
 }
 
 model Feedback {
-  id          String         @id @default(cuid())
-  studentId   String
-  authorId    String
-  message     String
-  tutorScore  Decimal?       @db.Decimal(5, 2)
-  createdAt   DateTime       @default(now())
-  student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  author      User           @relation("FeedbackAuthor", fields: [authorId], references: [id])
+  id        String         @id @default(cuid())
+  studentId String
+  authorId  String
+  message   String
+  type      FeedbackType
+  subject   String?
+  grade     Decimal?       @db.Decimal(3, 1)
+  score     Decimal?       @db.Decimal(5, 2)
+  createdAt DateTime       @default(now())
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  author    User           @relation("FeedbackAuthor", fields: [authorId], references: [id])
 
   @@index([studentId, authorId])
+  @@index([type])
 }
 
-model Achievement {
-  id          String         @id @default(cuid())
-  studentId   String
-  title       String
-  category    String
-  score       Decimal        @db.Decimal(5, 2)
-  awardedAt   DateTime       @default(now())
-  student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+model GrantDecision {
+  id           String         @id @default(cuid())
+  studentId    String
+  approvedById String
+  semester     String
+  status       DecisionStatus
+  finalScore   Decimal        @db.Decimal(5, 2)
+  reason       String?
+  createdAt    DateTime       @default(now())
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  approvedBy   User           @relation("GrantDecisionApprover", fields: [approvedById], references: [id])
 
-  @@index([studentId, category])
+  @@index([studentId, semester])
+  @@index([approvedById])
+  @@index([status])
 }

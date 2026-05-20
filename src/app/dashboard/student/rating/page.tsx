@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { students } from "@/services/mock-data";
+import { notFound } from "next/navigation";
 import { getLeaderboard } from "@/services/leaderboard";
+import { getCurrentStudentDashboard } from "@/services/dashboard-data";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,10 +13,13 @@ export const metadata = {
   description: "Talabalar o'rtasidagi umumiy reyting va o'rinlar.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function StudentRatingPage() {
-  const session = await getServerSession(authOptions);
-  const currentStudent = students.find((s) => s.email === session?.user?.email) || students[0];
-  const leaderboard = getLeaderboard();
+  const currentStudent = await getCurrentStudentDashboard();
+  if (!currentStudent) notFound();
+
+  const leaderboard = await getLeaderboard();
   
   const currentPosition = leaderboard.find((item) => item.id === currentStudent.id)?.position ?? 0;
 

@@ -1,17 +1,18 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { students } from "@/services/mock-data";
+import { notFound } from "next/navigation";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { CertificatesClient } from "@/components/dashboard/certificates-client";
+import { getCurrentStudentDashboard } from "@/services/dashboard-data";
 
 export const metadata = {
   title: "Sertifikatlar - PDP METRIC",
   description: "Talabaning yuklangan sertifikatlari va yutuqlari.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function StudentCertificatesPage() {
-  const session = await getServerSession(authOptions);
-  const currentStudent = students.find((s) => s.email === session?.user?.email) || students[0];
+  const currentStudent = await getCurrentStudentDashboard();
+  if (!currentStudent) notFound();
 
   return (
     <DashboardShell title="Sertifikatlar va Yutuqlar" eyebrow="Yutuqlar ombori">

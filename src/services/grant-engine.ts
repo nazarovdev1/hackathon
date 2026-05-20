@@ -30,3 +30,27 @@ export function calculateGrantScore(input: GrantKpiInput): GrantCalculationResul
     reasons,
   };
 }
+
+export const toGrantKpiInput = (record: {
+  academicScore: unknown;
+  attendanceScore: unknown;
+  assignmentScore: unknown;
+  activityScore: unknown;
+  tutorScore: unknown;
+  disciplineScore: unknown;
+  penaltyScore: unknown;
+  recoveryScore: unknown;
+  employmentBonus: unknown;
+  academicPercent: unknown;
+}): GrantKpiInput => ({
+  academic: Number(record.academicScore),
+  attendance: Number(record.attendanceScore),
+  assignment: Number(record.assignmentScore),
+  activity: Number(record.activityScore),
+  tutor: Number(record.tutorScore),
+  discipline: Number(record.disciplineScore),
+  penalty: Number(record.penaltyScore),
+  recovery: Number(record.recoveryScore),
+  employmentBonus: Number(record.employmentBonus),
+  academicPercent: Number(record.academicPercent),
+});

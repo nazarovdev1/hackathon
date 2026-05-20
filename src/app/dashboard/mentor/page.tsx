@@ -2,17 +2,15 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, MessageSquare, Plus, Activity, BookOpen, User } from "lucide-react";
-import { students } from "@/services/mock-data";
-import { calculateGrantScore } from "@/services/grant-engine";
+import { AlertCircle, Activity, BookOpen, User } from "lucide-react";
+import { getMentorStudents } from "@/services/dashboard-data";
+import { CompleteRecoveryButton, MentorStudentActions } from "@/components/dashboard/mentor-actions";
 
-export default function MentorDashboardPage() {
-  const rows = students.map((student) => ({
-    student,
-    grant: calculateGrantScore(student.kpi),
-  }));
+export const dynamic = "force-dynamic";
+
+export default async function MentorDashboardPage() {
+  const rows = await getMentorStudents();
 
   // High risk students
   const riskStudents = rows.filter(
@@ -75,14 +73,7 @@ export default function MentorDashboardPage() {
                         <StatusBadge value={grant.grantStatus} />
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button size="sm" variant="outline" className="border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/10">
-                            <MessageSquare className="mr-1 h-3.5 w-3.5" /> Tavsiya
-                          </Button>
-                          <Button size="sm" className="bg-emerald-600 text-white hover:bg-emerald-500">
-                            <Plus className="mr-1 h-3.5 w-3.5" /> Reabilitatsiya
-                          </Button>
-                        </div>
+                        <MentorStudentActions student={student} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -126,6 +117,21 @@ export default function MentorDashboardPage() {
                       />
                     </div>
                   </div>
+                  {student.recoveryTasks.length > 0 && (
+                    <div className="grid gap-2 border-t border-white/5 pt-3">
+                      {student.recoveryTasks.slice(0, 3).map((task) => (
+                        <div key={task.id} className="flex flex-col gap-2 rounded-md bg-background/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="text-xs font-medium">{task.title}</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {task.deadline} / +{task.recoveryScore} ball / {task.status}
+                            </p>
+                          </div>
+                          <CompleteRecoveryButton taskId={task.id} disabled={task.status === "COMPLETED"} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </CardContent>

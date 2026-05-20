@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { LogIn, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
+import { getSession, signIn } from "next-auth/react";
+import { LogIn, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,8 +17,7 @@ export function SignInForm() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitCredentials = async () => {
     setIsLoading(true);
     setError("");
 
@@ -27,27 +26,33 @@ export function SignInForm() {
         email,
         password,
         redirect: false,
+        callbackUrl: window.location.origin,
       });
 
-      if (res?.error) {
+      if (res?.error || res?.ok === false) {
         setError("Noto'g'ri email yoki parol");
       } else {
-        // If successful, determine where to redirect based on email or role.
-        // For simplicity, we just go to dashboard and let middleware handle it,
-        // or we can push to a general dashboard route.
-        if (email.includes("admin")) {
+        const session = await getSession();
+        const role = session?.user?.role;
+
+        if (role === "ADMIN") {
           router.push("/dashboard/admin");
-        } else if (email.includes("mentor")) {
+        } else if (role === "MENTOR" || role === "TUTOR") {
           router.push("/dashboard/mentor");
         } else {
           router.push("/dashboard/student");
         }
       }
-    } catch (err) {
+    } catch {
       setError("Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitCredentials();
   };
 
   return (
@@ -106,7 +111,7 @@ export function SignInForm() {
           {error && <p className="text-sm font-medium text-destructive">{error}</p>}
         </CardContent>
         <CardFooter className="flex flex-col gap-4 bg-transparent border-t-0 pb-6 pt-2">
-          <Button className="w-full" type="submit" disabled={isLoading}>
+          <Button className="w-full" type="button" disabled={isLoading} onClick={submitCredentials}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
             Kirish
           </Button>

@@ -5,4 +5,7 @@ export type SessionUser = {
   name: string;
   email: string;
   role: AppRole;
+  studentProfileId?: string;
+  mentorProfileId?: string;
+  tutorProfileId?: string;
 };

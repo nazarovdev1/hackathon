@@ -1,33 +1,58 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Command, Menu, Search } from "lucide-react";
+import { Menu, Search, LogOut, User, Settings } from "lucide-react";
 import { dashboardNavigation } from "@/constants/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { prisma } from "@/lib/prisma";
 
-function NavigationList({ role }: { role: string }) {
+function NavigationList({ role, pathname }: { role: string; pathname: string }) {
   const filteredNav = dashboardNavigation.filter((item) =>
     (item.roles as readonly string[]).includes(role)
   );
 
   return (
     <nav className="grid gap-1">
-      {filteredNav.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition hover:bg-secondary hover:text-foreground"
-        >
-          <item.icon className="h-4 w-4" />
-          {item.title}
-        </Link>
-      ))}
+      {filteredNav.map((item) => {
+        const isActive = pathname === item.href || (item.href !== "/dashboard/student" && pathname.startsWith(item.href));
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition ${
+              isActive
+                ? "bg-primary/10 font-medium text-primary"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            }`}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.title}
+          </Link>
+        );
+      })}
     </nav>
   );
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 export async function DashboardShell({
@@ -41,6 +66,22 @@ export async function DashboardShell({
 }) {
   const session = await getServerSession(authOptions);
   const role = session?.user?.role || "STUDENT";
+  const userName = session?.user?.name || "Foydalanuvchi";
+  const userEmail = session?.user?.email || "";
+  const avatarUrl = session?.user?.image;
+
+  let studentInfo: { group: string; faculty: string } | null = null;
+  if (session?.user?.studentProfileId) {
+    const profile = await prisma.studentProfile.findUnique({
+      where: { id: session.user.studentProfileId },
+      select: { groupName: true, faculty: true },
+    });
+    if (profile) {
+      studentInfo = { group: profile.groupName, faculty: profile.faculty };
+    }
+  }
+
+  const pathname = "/dashboard/student";
 
   return (
     <div className="metric-grid min-h-screen">
@@ -55,7 +96,65 @@ export async function DashboardShell({
           </span>
         </Link>
         <div className="mt-8">
-          <NavigationList role={role} />
+          <NavigationList role={role} pathname={pathname} />
+        </div>
+
+        <div className="absolute bottom-5 left-5 right-5">
+          <DropdownMenu>
+            <DropdownMenuTrigger render={
+              <button className="flex w-full items-center gap-3 rounded-lg border border-border/40 bg-secondary/30 p-3 text-left transition hover:bg-secondary/50">
+                {avatarUrl ? (
+                  <Image
+                    src={avatarUrl}
+                    alt={userName}
+                    width={36}
+                    height={36}
+                    className="h-9 w-9 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                    {getInitials(userName)}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{userName}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {studentInfo ? `${studentInfo.group}` : role}
+                  </p>
+                </div>
+              </button>
+            } />
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col gap-1">
+                  <span className="font-medium">{userName}</span>
+                  <span className="text-xs font-normal text-muted-foreground">{userEmail}</span>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <Link href="/dashboard/student/profile" className="flex w-full items-center cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  Profil
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href="/dashboard/settings" className="flex w-full items-center cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Sozlamalar
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <form action="/api/auth/signout" method="POST" className="w-full">
+                  <button type="submit" className="flex w-full items-center cursor-pointer text-rose-600 dark:text-rose-400">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Chiqish
+                  </button>
+                </form>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
 
@@ -67,7 +166,7 @@ export async function DashboardShell({
                 <Menu className="h-4 w-4" />
               </SheetTrigger>
               <SheetContent side="left" className="w-72">
-                <NavigationList role={role} />
+                <NavigationList role={role} pathname={pathname} />
               </SheetContent>
             </Sheet>
             <div>
@@ -81,6 +180,56 @@ export async function DashboardShell({
               <Input className="border-0 bg-transparent shadow-none focus-visible:ring-0" placeholder="Talabalar, guruhlar, grantlarni qidirish..." />
             </div>
             <ThemeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger render={
+                <button className="flex items-center gap-2 rounded-full border border-border/40 bg-secondary/30 p-1 pr-3 transition hover:bg-secondary/50">
+                  {avatarUrl ? (
+                    <Image
+                      src={avatarUrl}
+                      alt={userName}
+                      width={28}
+                      height={28}
+                      className="h-7 w-7 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                      {getInitials(userName)}
+                    </span>
+                  )}
+                  <span className="hidden text-sm font-medium sm:inline">{userName.split(" ")[0]}</span>
+                </button>
+              } />
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col gap-1">
+                    <span className="font-medium">{userName}</span>
+                    <span className="text-xs font-normal text-muted-foreground">{userEmail}</span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Link href="/dashboard/student/profile" className="flex w-full items-center cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Profil
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link href="/dashboard/settings" className="flex w-full items-center cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Sozlamalar
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <form action="/api/auth/signout" method="POST" className="w-full">
+                    <button type="submit" className="flex w-full items-center cursor-pointer text-rose-600 dark:text-rose-400">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Chiqish
+                    </button>
+                  </form>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
         <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">{children}</main>

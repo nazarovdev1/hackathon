@@ -1,5 +1,5 @@
 import { Award, Gauge, GraduationCap, TrendingUp, UserCheck, Trophy, Calendar, Code, Heart, Shield } from "lucide-react";
-import Image from "next/image";
+import { notFound } from "next/navigation";
 import { AcademicChart, AttendanceChart } from "@/components/charts/analytics-charts";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
@@ -9,16 +9,19 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { calculateGrantScore } from "@/services/grant-engine";
 import { getLeaderboard } from "@/services/leaderboard";
-import { students } from "@/services/mock-data";
+import { getCurrentStudentDashboard } from "@/services/dashboard-data";
 import { buildRecommendations } from "@/services/recommendations";
 
-export default function StudentDashboardPage() {
-  const student = students[0];
-  const grant = calculateGrantScore(student.kpi);
+export const dynamic = "force-dynamic";
+
+export default async function StudentDashboardPage() {
+  const student = await getCurrentStudentDashboard();
+  if (!student) notFound();
+
+  const grant = student.grant;
   const recommendations = buildRecommendations(student.kpi, grant);
-  const leaderboard = getLeaderboard();
+  const leaderboard = await getLeaderboard();
   const position = leaderboard.find((item) => item.id === student.id)?.position ?? 0;
 
   return (

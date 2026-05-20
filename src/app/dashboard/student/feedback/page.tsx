@@ -1,11 +1,10 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { students } from "@/services/mock-data";
+import { notFound } from "next/navigation";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap, MessageSquare, Star, Calendar, StarHalf, Heart, CheckCircle2 } from "lucide-react";
 import { MotionPanel } from "@/components/providers/motion-panel";
+import { getCurrentStudentDashboard, getCurrentStudentFeedback } from "@/services/dashboard-data";
 
 export const metadata = {
   title: "Mentor Feedback - PDP METRIC",
@@ -15,106 +14,22 @@ export const metadata = {
 type FeedbackItem = {
   id: string;
   mentorName: string;
-  role: "Java Mentor" | "React Mentor" | "Tyutor" | "Coordinator" | "Discipline Inspector";
+  role: string;
   date: string;
   subject: string;
   grade: number; // Out of 5
   score: number; // Added to KPI
   comment: string;
-  category: "Assignment" | "Activity" | "Tutor" | "Discipline";
+  category: string;
 };
 
-// Mock feedbacks linked to student index
-const mockFeedbacks: Record<string, FeedbackItem[]> = {
-  "stu_001": [
-    {
-      id: "f1",
-      mentorName: "Rustam Qodirov",
-      role: "Java Mentor",
-      date: "2026-05-18",
-      subject: "Backend Spring Boot & Database Loyihasi",
-      grade: 5.0,
-      score: 15,
-      comment: "Loyiha arxitekturasi juda yaxshi tuzilgan. JPA relation-lardan to'g'ri foydalanilgan va transaction management mukammal ishlaydi. Clean code standartlariga 100% javob beradi. Ajoyib natija!",
-      category: "Assignment",
-    },
-    {
-      id: "f2",
-      mentorName: "Dilfuza Alimova",
-      role: "Tyutor",
-      date: "2026-05-12",
-      subject: "Faollik va jamoaviy ish",
-      grade: 4.8,
-      score: 4,
-      comment: "Madina darslarda juda faol va guruh sardori sifatida boshqalarni ham doim rag'batlantirib keladi. Soft-skills bo'yicha yuqori natijalar ko'rsatmoqda. Faqat darslarga biroz vaqtliroq kelish tavsiya etiladi.",
-      category: "Tutor",
-    },
-    {
-      id: "f3",
-      mentorName: "Sardor Salimov",
-      role: "Discipline Inspector",
-      date: "2026-05-05",
-      subject: "Akademik intizom va tartib-qoidalar",
-      grade: 5.0,
-      score: 8,
-      comment: "PDP akademiyasidagi barcha tartib va qoidalarga mukammal darajada rioya qilingan. Dars qoldirish yoki kechikish holatlari deyarli kuzatilmadi.",
-      category: "Discipline",
-    }
-  ],
-  "stu_002": [
-    {
-      id: "f4",
-      mentorName: "Rustam Qodirov",
-      role: "Java Mentor",
-      date: "2026-05-15",
-      subject: "Spring Core & MVC",
-      grade: 3.5,
-      score: 10,
-      comment: "Loyiha o'z vaqtida topshirilmadi. Dependency Injection va Bean scopes mavzulari bo'yicha bilimingizni qayta ko'rib chiqishingiz kerak. Kod takrorlanishi juda ko'p.",
-      category: "Assignment",
-    },
-    {
-      id: "f5",
-      mentorName: "Dilfuza Alimova",
-      role: "Tyutor",
-      date: "2026-05-10",
-      subject: "Tashqi faollik",
-      grade: 3.0,
-      score: 2,
-      comment: "Tyutorlik darslariga tayyorgarliksiz keladi, so'ralgan hisobotlarni kechiktirib topshiradi. Akademiyadan tashqari loyihalarda faollik ko'rsatmadi.",
-      category: "Tutor",
-    }
-  ],
-  "stu_003": [
-    {
-      id: "f6",
-      mentorName: "Nozima Karimova",
-      role: "React Mentor",
-      date: "2026-05-19",
-      subject: "Next.js & State Management Project",
-      grade: 5.0,
-      score: 14,
-      comment: "Komponentlar mukammal darajada bo'lingan va Tailwind CSS yordamida responsive dizayn to'liq ta'minlangan. Custom hook-lardan va Context API dan juda o'rinli foydalanilgan. Tabriklayman!",
-      category: "Assignment",
-    },
-    {
-      id: "f7",
-      mentorName: "Dilfuza Alimova",
-      role: "Tyutor",
-      date: "2026-05-14",
-      subject: "Darsga qatnashish va faollik",
-      grade: 5.0,
-      score: 5,
-      comment: "Guruhning eng namunali va intizomli talabalaridan biri. Hamma topshiriqlarni eng birinchilardan bo'lib yakunlaydi. Darsdan tashqari tadbirlarni tashkil etishda faol yordam berdi.",
-      category: "Tutor",
-    }
-  ]
-};
+export const dynamic = "force-dynamic";
 
 export default async function StudentFeedbackPage() {
-  const session = await getServerSession(authOptions);
-  const currentStudent = students.find((s) => s.email === session?.user?.email) || students[0];
-  const feedbacks = mockFeedbacks[currentStudent.id] || [];
+  const currentStudent = await getCurrentStudentDashboard();
+  if (!currentStudent) notFound();
+
+  const feedbacks: FeedbackItem[] = await getCurrentStudentFeedback();
 
   const averageGrade = feedbacks.length > 0 
     ? (feedbacks.reduce((sum, item) => sum + item.grade, 0) / feedbacks.length).toFixed(1)

@@ -1,14 +1,13 @@
-import { calculateGrantScore } from "@/services/grant-engine";
-import { students } from "@/services/mock-data";
+import { getAdminGrantOverview } from "@/services/dashboard-data";
 
-export function getGrantAnalyticsSummary() {
-  const scored = students.map((student) => calculateGrantScore(student.kpi));
+export async function getGrantAnalyticsSummary() {
+  const overview = await getAdminGrantOverview();
 
   return {
-    total: scored.length,
-    eligible: scored.filter((item) => item.grantStatus === "ELIGIBLE").length,
-    risk: scored.filter((item) => item.grantStatus === "RISK").length,
-    denied: scored.filter((item) => item.grantStatus === "DENIED").length,
-    highRisk: scored.filter((item) => item.riskLevel === "HIGH").length,
+    total: overview.total,
+    eligible: overview.eligible,
+    risk: overview.rows.filter((item) => item.grant.grantStatus === "RISK").length,
+    denied: overview.rows.filter((item) => item.grant.grantStatus === "DENIED").length,
+    highRisk: overview.highRisk,
   };
 }

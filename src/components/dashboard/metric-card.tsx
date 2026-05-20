@@ -16,14 +16,21 @@ export function MetricCard({
   className?: string;
 }) {
   return (
-    <Card className={cn("glass-panel overflow-hidden", className)}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+    <Card className={cn(
+      "glass-panel overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_4px_20px_rgba(6,182,212,0.15)]", 
+      className
+    )}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-cyan-300" />
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/40 bg-secondary/30 text-primary">
+          <Icon className="h-4 w-4" />
+        </span>
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-semibold tracking-normal">{value}</div>
-        <p className="mt-2 text-sm text-muted-foreground">{helper}</p>
+        <div className="text-3xl font-bold tracking-tight text-foreground">
+          {value}
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{helper}</p>
       </CardContent>
     </Card>
   );

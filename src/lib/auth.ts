@@ -4,9 +4,9 @@ import { authSecret } from "@/constants/auth";
 import type { AppRole } from "@/types/auth";
 
 const demoUsers = [
-  { id: "admin_1", name: "EDUMETRIC Admin", email: "admin@edumetric.uz", password: "admin123", role: "ADMIN" as AppRole },
-  { id: "student_1", name: "Madina Karimova", email: "student@edumetric.uz", password: "student123", role: "STUDENT" as AppRole },
-  { id: "mentor_1", name: "Mentor Operator", email: "mentor@edumetric.uz", password: "mentor123", role: "MENTOR" as AppRole },
+  { id: "admin_1", name: "PDP Admin", email: "admin@pdp.uz", password: "admin123", role: "ADMIN" as AppRole },
+  { id: "student_1", name: "PDP Talaba", email: "student@pdp.uz", password: "student123", role: "STUDENT" as AppRole },
+  { id: "mentor_1", name: "PDP Mentor", email: "mentor@pdp.uz", password: "mentor123", role: "MENTOR" as AppRole },
 ];
 
 export const authOptions: NextAuthOptions = {
@@ -18,7 +18,7 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     CredentialsProvider({
-      name: "EDUMETRIC Demo",
+      name: "PDP METRIC Demo",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },

@@ -46,23 +46,23 @@
 }
 
 :root {
-  --background: #0B0F19;
-  --foreground: #F9FAFB;
-  --card: #111827;
-  --card-foreground: #F9FAFB;
-  --popover: #111827;
-  --popover-foreground: #F9FAFB;
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
   --primary: #10B981;
-  --primary-foreground: #0B0F19;
-  --secondary: #111827;
-  --secondary-foreground: #F9FAFB;
-  --muted: #9CA3AF;
-  --muted-foreground: #F9FAFB;
-  --accent: #34D399;
-  --accent-foreground: #0B0F19;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1F5F9;
+  --secondary-foreground: #0F172A;
+  --muted: #E2E8F0;
+  --muted-foreground: #64748B;
+  --accent: #F1F5F9;
+  --accent-foreground: #0F172A;
   --destructive: #EF4444;
-  --border: #374151;
-  --input: #374151;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
   --ring: #10B981;
   --warning: #F59E0B;
   --chart-1: #10B981;
@@ -71,14 +71,23 @@
   --chart-4: #EF4444;
   --chart-5: #3B82F6;
   --radius: 0.5rem;
-  --sidebar: #0B0F19;
-  --sidebar-foreground: #F9FAFB;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #0F172A;
   --sidebar-primary: #10B981;
-  --sidebar-primary-foreground: #0B0F19;
-  --sidebar-accent: #111827;
-  --sidebar-accent-foreground: #F9FAFB;
-  --sidebar-border: #374151;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F1F5F9;
+  --sidebar-accent-foreground: #0F172A;
+  --sidebar-border: #E2E8F0;
   --sidebar-ring: #10B981;
+
+  --glass-border: rgba(15, 23, 42, 0.08);
+  --glass-shadow: 0 0 40px rgba(16, 185, 129, 0.04);
+  --bg-gradient: 
+    linear-gradient(120deg, oklch(0.69 0.18 252 / 6%), transparent 28%),
+    radial-gradient(circle at 88% 12%, oklch(0.76 0.15 190 / 6%), transparent 24%),
+    linear-gradient(180deg, transparent, oklch(0.98 0.01 252 / 10%));
+  --grid-line-color: oklch(0.76 0.15 190 / 3%);
+  --grid-line-color-2: oklch(0.69 0.18 252 / 3%);
 }
 
 .dark {
@@ -92,10 +101,10 @@
   --primary-foreground: #0B0F19;
   --secondary: #111827;
   --secondary-foreground: #F9FAFB;
-  --muted: #9CA3AF;
-  --muted-foreground: #F9FAFB;
-  --accent: #34D399;
-  --accent-foreground: #0B0F19;
+  --muted: #1F2937;
+  --muted-foreground: #9CA3AF;
+  --accent: #1F2937;
+  --accent-foreground: #F9FAFB;
   --destructive: #EF4444;
   --border: #374151;
   --input: #374151;
@@ -114,6 +123,15 @@
   --sidebar-accent-foreground: #F9FAFB;
   --sidebar-border: #374151;
   --sidebar-ring: #10B981;
+
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 0 40px rgba(56, 189, 248, 0.08);
+  --bg-gradient:
+    linear-gradient(120deg, oklch(0.69 0.18 252 / 16%), transparent 28%),
+    radial-gradient(circle at 88% 12%, oklch(0.76 0.15 190 / 16%), transparent 24%),
+    linear-gradient(180deg, transparent, oklch(0.08 0.03 252 / 38%));
+  --grid-line-color: oklch(0.76 0.15 190 / 8%);
+  --grid-line-color-2: oklch(0.69 0.18 252 / 8%);
 }
 
 @layer base {
@@ -127,22 +145,22 @@
 
   body {
     @apply bg-background text-foreground;
-    background-image:
-      linear-gradient(120deg, oklch(0.69 0.18 252 / 16%), transparent 28%),
-      radial-gradient(circle at 88% 12%, oklch(0.76 0.15 190 / 16%), transparent 24%),
-      linear-gradient(180deg, transparent, oklch(0.08 0.03 252 / 38%));
+    background-image: var(--bg-gradient);
   }
 }
 
 @layer utilities {
   .glass-panel {
-    @apply border border-white/10 bg-card/70 shadow-[0_0_40px_rgba(56,189,248,0.08)] backdrop-blur-xl;
+    border: 1px solid var(--glass-border);
+    background-color: color-mix(in srgb, var(--card) 70%, transparent);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(24px);
   }
 
   .metric-grid {
     background-image:
-      linear-gradient(to right, oklch(0.76 0.15 190 / 8%) 1px, transparent 1px),
-      linear-gradient(to bottom, oklch(0.69 0.18 252 / 8%) 1px, transparent 1px);
+      linear-gradient(to right, var(--grid-line-color) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line-color-2) 1px, transparent 1px);
     background-size: 42px 42px;
   }
 }

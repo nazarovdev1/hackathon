@@ -25,49 +25,49 @@ export default function AdminDashboardPage() {
   const leaderboard = getLeaderboard();
 
   return (
-    <DashboardShell title="Admin Dashboard" eyebrow="Enterprise Grant Operations">
+    <DashboardShell title="Admin boshqaruv paneli" eyebrow="Universitet grant operatsiyalari">
       <div className="grid gap-5">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MotionPanel delay={0.03}>
-            <MetricCard title="Total Students" value={`${students.length}`} helper="Active monitored profiles" icon={Users} />
+            <MetricCard title="Jami talabalar" value={`${students.length}`} helper="Faol nazoratdagi profillar" icon={Users} />
           </MotionPanel>
           <MotionPanel delay={0.06}>
-            <MetricCard title="Eligible Grants" value={`${eligible}`} helper="Final score is 80 or higher" icon={ShieldCheck} />
+            <MetricCard title="Grantga munosiblar" value={`${eligible}`} helper="Yakuniy balli 80 va undan yuqori" icon={ShieldCheck} />
           </MotionPanel>
           <MotionPanel delay={0.09}>
-            <MetricCard title="High Risk" value={`${highRisk}`} helper="Academic denied or score below 65" icon={AlertTriangle} />
+            <MetricCard title="Yuqori xavf guruhi" value={`${highRisk}`} helper="Akademik rad etilgan yoki ball 65 dan past" icon={AlertTriangle} />
           </MotionPanel>
           <MotionPanel delay={0.12}>
-            <MetricCard title="Top Score" value={`${leaderboard[0]?.score ?? 0}`} helper={leaderboard[0]?.name ?? "No data"} icon={Trophy} />
+            <MetricCard title="Eng yuqori ball" value={`${leaderboard[0]?.score ?? 0}`} helper={leaderboard[0]?.name ?? "Ma'lumot yo'q"} icon={Trophy} />
           </MotionPanel>
         </div>
 
         <Tabs defaultValue="students" className="w-full">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <TabsList className="glass-panel">
-              <TabsTrigger value="students">Students</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+              <TabsTrigger value="students">Talabalar</TabsTrigger>
+              <TabsTrigger value="analytics">Tahlillar</TabsTrigger>
+              <TabsTrigger value="leaderboard">Reyting</TabsTrigger>
             </TabsList>
             <div className="flex gap-2">
               <Select defaultValue="all">
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Faculty" />
+                  <SelectValue placeholder="Fakultet" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All faculties</SelectItem>
+                  <SelectItem value="all">Barcha fakultetlar</SelectItem>
                   <SelectItem value="cs">Computer Science</SelectItem>
                   <SelectItem value="ds">Data Science</SelectItem>
                 </SelectContent>
               </Select>
               <DropdownMenu>
                 <DropdownMenuTrigger render={<Button variant="outline" />}>
-                  <Filter className="h-4 w-4" /> Filter
+                  <Filter className="h-4 w-4" /> Saralash
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Eligible only</DropdownMenuItem>
-                  <DropdownMenuItem>High risk only</DropdownMenuItem>
-                  <DropdownMenuItem>Penalty exists</DropdownMenuItem>
+                  <DropdownMenuItem>Faqat grantdagilar</DropdownMenuItem>
+                  <DropdownMenuItem>Faqat yuqori xavfdagilar</DropdownMenuItem>
+                  <DropdownMenuItem>Jarimasi borlar</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -76,18 +76,18 @@ export default function AdminDashboardPage() {
           <TabsContent value="students" className="mt-5">
             <Card id="grants" className="glass-panel">
               <CardHeader>
-                <CardTitle>Grant Status Data Table</CardTitle>
+                <CardTitle>Grant holatlari jadvali</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Student</TableHead>
-                      <TableHead>Faculty</TableHead>
-                      <TableHead>Final Score</TableHead>
-                      <TableHead>Grant</TableHead>
-                      <TableHead>Risk</TableHead>
-                      <TableHead className="text-right">Academic</TableHead>
+                      <TableHead>Talaba</TableHead>
+                      <TableHead>Fakultet</TableHead>
+                      <TableHead>Yakuniy ball</TableHead>
+                      <TableHead>Grant holati</TableHead>
+                      <TableHead>Xavf darajasi</TableHead>
+                      <TableHead className="text-right">O'zlashtirish</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -113,7 +113,7 @@ export default function AdminDashboardPage() {
           <TabsContent value="analytics" className="mt-5">
             <Card className="glass-panel">
               <CardHeader>
-                <CardTitle>Grant Distribution</CardTitle>
+                <CardTitle>Grantlar taqsimoti</CardTitle>
               </CardHeader>
               <CardContent>
                 <GrantDistributionChart data={distribution} />
@@ -124,7 +124,7 @@ export default function AdminDashboardPage() {
           <TabsContent value="leaderboard" className="mt-5">
             <Card id="leaderboard" className="glass-panel">
               <CardHeader>
-                <CardTitle>Leaderboard Management</CardTitle>
+                <CardTitle>Reyting jadvalini boshqarish</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-3">

@@ -1,1 +1,1 @@
-export { getLeaderboard } from "@/services/dashboard-data";
+export { getLeaderboard, getPublicStudentDashboard } from "@/services/dashboard-data";

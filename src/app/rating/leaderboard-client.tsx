@@ -5,13 +5,6 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import {
 	Table,
 	TableBody,
 	TableCell,
@@ -170,25 +163,19 @@ export function LeaderboardClient({ initialData }: LeaderboardClientProps) {
 						/>
 					</div>
 
-					{/* Faculty dropdown */}
+					{/* Faculty dropdown — native select for reliability */}
 					<div className='flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end'>
 						<Filter className='h-4 w-4 text-muted-foreground hidden xs:block' />
-						<Select
+						<select
 							value={facultyFilter}
-							onValueChange={val => setFacultyFilter(val || 'ALL')}
+							onChange={e => setFacultyFilter(e.target.value)}
+							className='h-9 w-full sm:w-55 rounded-lg border border-input bg-transparent px-3 py-1 text-sm text-foreground shadow-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30 transition-colors cursor-pointer'
 						>
-							<SelectTrigger className='h-9 w-full sm:w-55'>
-								<SelectValue placeholder='Fakultetni tanlang' />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value='ALL'>Barcha fakultetlar</SelectItem>
-								{faculties.map(f => (
-									<SelectItem key={f} value={f}>
-										{f}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+							<option value='ALL'>Barcha fakultetlar</option>
+							{faculties.map(f => (
+								<option key={f} value={f}>{f}</option>
+							))}
+						</select>
 					</div>
 				</div>
 			</MotionPanel>

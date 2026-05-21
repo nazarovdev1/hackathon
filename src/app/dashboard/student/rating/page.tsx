@@ -55,13 +55,8 @@ export default async function StudentRatingPage() {
 
         {/* Kuchli uchlik (Top 3) */}
         <div className="grid gap-4 sm:grid-cols-3">
-          {leaderboard.slice(0, 3).map((item, idx) => {
-            const colors = [
-              "from-amber-400 to-yellow-600 border-amber-400/40 text-amber-600 bg-amber-500/5",
-              "from-slate-300 to-slate-500 border-slate-300/40 text-slate-500 bg-slate-500/5",
-              "from-amber-600 to-orange-700 border-amber-600/30 text-amber-700 bg-amber-700/5",
-            ];
-            const medalIcons = [
+           {leaderboard.slice(0, 3).map((item, idx) => {
+             const medalIcons = [
               <Trophy className="h-8 w-8 text-amber-500" key="gold" />,
               <Medal className="h-8 w-8 text-slate-400" key="silver" />,
               <Medal className="h-8 w-8 text-amber-700" key="bronze" />,

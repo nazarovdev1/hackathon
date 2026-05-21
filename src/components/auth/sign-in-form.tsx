@@ -148,7 +148,7 @@ export function SignInForm() {
 							href='/rating'
 							className='text-primary hover:underline font-semibold flex items-center gap-1'
 						>
-							Mehmon sifatida ko'rish →
+							Reytingni ko'rish →
 						</Link>
 						<div className='text-muted-foreground text-xs mt-1'>
 							Hisobingiz yo'qmi?{' '}

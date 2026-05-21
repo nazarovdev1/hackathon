@@ -34,6 +34,7 @@ export function calculateGrantScore(input: GrantKpiInput): GrantCalculationResul
 export const toGrantKpiInput = (record: {
   academicScore: unknown;
   attendanceScore: unknown;
+  attendancePercent?: unknown;
   assignmentScore: unknown;
   activityScore: unknown;
   tutorScore: unknown;
@@ -42,15 +43,30 @@ export const toGrantKpiInput = (record: {
   recoveryScore: unknown;
   employmentBonus: unknown;
   academicPercent: unknown;
-}): GrantKpiInput => ({
-  academic: Number(record.academicScore),
-  attendance: Number(record.attendanceScore),
-  assignment: Number(record.assignmentScore),
-  activity: Number(record.activityScore),
-  tutor: Number(record.tutorScore),
-  discipline: Number(record.disciplineScore),
-  penalty: Number(record.penaltyScore),
-  recovery: Number(record.recoveryScore),
-  employmentBonus: Number(record.employmentBonus),
-  academicPercent: Number(record.academicPercent),
-});
+}): GrantKpiInput => {
+  const academicPercent = Number(record.academicPercent);
+  const attendancePercent = Number(record.attendancePercent ?? 0);
+
+  // Formuladan hisoblash:
+  // Akademik ball = (acPct × 40) / 100
+  // Davomat ball  = (attPct × 20) / 100
+  const academicScore = attendancePercent > 0
+    ? Math.round((academicPercent * 40) / 100 * 100) / 100
+    : Number(record.academicScore);
+  const attendanceScore = attendancePercent > 0
+    ? Math.round((attendancePercent * 20) / 100 * 100) / 100
+    : Number(record.attendanceScore);
+
+  return {
+    academic: academicScore,
+    attendance: attendanceScore,
+    assignment: Number(record.assignmentScore),
+    activity: Number(record.activityScore),
+    tutor: Number(record.tutorScore),
+    discipline: Number(record.disciplineScore),
+    penalty: Number(record.penaltyScore),
+    recovery: Number(record.recoveryScore),
+    employmentBonus: Number(record.employmentBonus),
+    academicPercent,
+  };
+};

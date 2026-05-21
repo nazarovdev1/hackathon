@@ -177,9 +177,10 @@ model ScoreRecord {
   id              String         @id @default(cuid())
   studentId       String
   semester        String
-  academicPercent Decimal        @db.Decimal(5, 2)
-  academicScore   Decimal        @db.Decimal(5, 2)
-  attendanceScore Decimal        @db.Decimal(5, 2)
+  academicPercent    Decimal        @db.Decimal(5, 2)
+  academicScore      Decimal        @db.Decimal(5, 2)
+  attendancePercent  Decimal        @db.Decimal(5, 2) @default(0)
+  attendanceScore    Decimal        @db.Decimal(5, 2)
   assignmentScore Decimal        @db.Decimal(5, 2)
   activityScore   Decimal        @db.Decimal(5, 2)
   tutorScore      Decimal        @db.Decimal(5, 2)

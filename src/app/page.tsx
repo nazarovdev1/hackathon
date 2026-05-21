@@ -23,8 +23,8 @@ export default function Home() {
 			<section className='mx-auto flex h-full w-full max-w-7xl flex-col justify-between relative z-10 pb-4'>
 				{/* Navigation */}
 				<nav className='flex items-center justify-between backdrop-blur-sm bg-background/50 p-3 sm:p-4 rounded-2xl border border-border/40 shrink-0'>
-					<div className='flex items-center gap-3'>
-						<div className='flex h-10 w-10 items-center justify-center rounded-full shadow-[0_0_28px_rgba(16,185,129,0.35)] overflow-hidden bg-white'>
+					<Link href='/' className='flex items-center gap-3 group'>
+						<div className='flex h-10 w-10 items-center justify-center rounded-full shadow-[0_0_28px_rgba(16,185,129,0.35)] transition-transform group-hover:scale-105 overflow-hidden bg-white'>
 							<Image
 								src='/pdp-logo.jpg'
 								alt='PDP Logo'
@@ -36,21 +36,22 @@ export default function Home() {
 						<span className='text-lg font-semibold tracking-normal'>
 							PDP METRIC
 						</span>
-					</div>
+					</Link>
 					<div className='flex items-center gap-4'>
-						<Link
-							className='text-sm font-medium hover:text-primary transition-colors hidden sm:block'
-							href='/rating'
-						>
-							Reyting (Mehmon)
-						</Link>
-						<Link
-							className='text-sm font-medium hover:text-primary transition-colors hidden sm:block'
-							href='#features'
-						>
-							Imkoniyatlar
-						</Link>
-						<div className='h-4 w-px bg-border hidden sm:block' />
+						<div className='flex items-center gap-1 sm:gap-2 bg-secondary/40 rounded-xl p-1 border border-border/30'>
+							<Link
+								className='text-sm font-medium hover:text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-secondary'
+								href='/rating'
+							>
+								Reyting
+							</Link>
+							<Link
+								className='text-sm font-medium hover:text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-secondary'
+								href='/rating/criteria'
+							>
+								Grant Nizomi
+							</Link>
+						</div>
 						<ThemeToggle />
 						<Link
 							className={buttonVariants({ variant: 'ghost', size: 'sm' })}
@@ -110,7 +111,7 @@ export default function Home() {
 									})}
 									href='/rating'
 								>
-									Reytingni ko'rish (Mehmon)
+									Reytingni ko'rish
 								</Link>
 							</div>
 						</div>

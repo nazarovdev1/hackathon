@@ -1,6 +1,5 @@
-import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Award, Gauge, GraduationCap, TrendingUp, UserCheck, Calendar, Code, Heart, Shield, ArrowLeft, Trophy } from "lucide-react";
+import { Award, Gauge, GraduationCap, TrendingUp, UserCheck, Calendar, Code, Heart, Shield, ArrowLeft, Trophy, AlertTriangle } from "lucide-react";
 import { getPublicStudentDashboard, getLeaderboard } from "@/services/leaderboard";
 import { AcademicChart, AttendanceChart } from "@/components/charts/analytics-charts";
 import { MetricCard } from "@/components/dashboard/metric-card";
@@ -19,15 +18,47 @@ interface StudentDetailPageProps {
 
 export default async function StudentDetailPage({ params }: StudentDetailPageProps) {
   const { id } = await params;
-  const student = await getPublicStudentDashboard(id);
-  
+
+  let student: Awaited<ReturnType<typeof getPublicStudentDashboard>> = null;
+  let position = 0;
+
+  try {
+    student = await getPublicStudentDashboard(id);
+    if (student) {
+      const leaderboard = await getLeaderboard();
+      position = leaderboard.find((item) => item.id === student!.id)?.position ?? 0;
+    }
+  } catch {
+    // DB unavailable — render error state below
+  }
+
+  // Student not found OR DB down
   if (!student) {
-    notFound();
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-6 py-20 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/10">
+          <AlertTriangle className="h-7 w-7 text-amber-500" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">
+            Talaba topilmadi yoki ma&apos;lumotlar bazasi mavjud emas
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground max-w-sm mx-auto">
+            Ushbu talaba profili mavjud emas yoki ma&apos;lumotlar bazasiga ulanib bo&apos;lmadi.
+          </p>
+        </div>
+        <Link
+          href="/rating"
+          className="mt-2 inline-flex items-center gap-2 rounded-lg border border-border/40 bg-secondary/40 hover:bg-secondary/70 px-4 py-2 text-sm font-medium transition"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Reytingga qaytish
+        </Link>
+      </div>
+    );
   }
 
   const grant = student.grant;
-  const leaderboard = await getLeaderboard();
-  const position = leaderboard.find((item) => item.id === student.id)?.position ?? 0;
 
   return (
     <div className="space-y-6">
@@ -60,7 +91,7 @@ export default async function StudentDetailPage({ params }: StudentDetailPagePro
                 {student.name}
               </h2>
               <p className="text-xs text-muted-foreground">
-                Profil ID: {student.studentId} • Email: {student.email}
+                Profil ID: {student.studentId}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 items-center">

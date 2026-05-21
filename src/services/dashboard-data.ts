@@ -42,8 +42,16 @@ type AdminStudentRow = {
 	email: string
 	faculty: string
 	group: string
+	status: StudentDashboardSnapshot['status']
+	statusReason: string | null
 	academicPercent: number
 	grant: GrantCalculationResult
+	achievements: {
+		id: string
+		title: string
+		score: number
+		status: 'PENDING' | 'APPROVED' | 'REJECTED'
+	}[]
 }
 
 function formatDate(value: Date) {
@@ -232,8 +240,16 @@ function toAdminStudentRow(student: StudentWithDashboardData): AdminStudentRow {
 		email: student.user.email,
 		faculty: student.faculty,
 		group: student.groupName,
+		status: (student as any).status,
+		statusReason: (student as any).statusReason ?? null,
 		academicPercent: kpi.academicPercent,
 		grant: calculateGrantScore(kpi),
+		achievements: student.achievements.map(achievement => ({
+			id: achievement.id,
+			title: achievement.title,
+			score: Number(achievement.score),
+			status: achievement.status,
+		})),
 	}
 }
 

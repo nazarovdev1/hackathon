@@ -1,40 +1,21 @@
-import { GrantDistributionChart } from '@/components/charts/analytics-charts'
-import { MetricCard } from '@/components/dashboard/metric-card'
-import { DashboardShell } from '@/components/layout/dashboard-shell'
-import { MotionPanel } from '@/components/providers/motion-panel'
-import { StatusBadge } from '@/components/shared/status-badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '@/components/ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { getAdminGrantOverview } from '@/services/dashboard-data'
-import { AlertTriangle, Filter, ShieldCheck, Trophy, Users } from 'lucide-react'
+import { AlertTriangle, Filter, ShieldCheck, Trophy, Users } from "lucide-react";
+import { GrantDistributionChart } from "@/components/charts/analytics-charts";
+import { MetricCard } from "@/components/dashboard/metric-card";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { MotionPanel } from "@/components/providers/motion-panel";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getAdminGrantOverview } from "@/services/dashboard-data";
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminDashboardPage() {
-	const { rows, eligible, highRisk, distribution, leaderboard, total } =
-		await getAdminGrantOverview()
+  const { rows, eligible, highRisk, distribution, leaderboard, total } = await getAdminGrantOverview();
 
 	return (
 		<DashboardShell
@@ -77,83 +58,73 @@ export default async function AdminDashboardPage() {
 					</MotionPanel>
 				</div>
 
-				<Tabs defaultValue='students' className='w-full'>
-					<div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-						<TabsList className='glass-panel'>
-							<TabsTrigger value='students'>Talabalar</TabsTrigger>
-							<TabsTrigger value='analytics'>Tahlillar</TabsTrigger>
-							<TabsTrigger value='leaderboard'>Reyting</TabsTrigger>
-						</TabsList>
-						<div className='flex gap-2'>
-							<Select defaultValue='all'>
-								<SelectTrigger className='w-40'>
-									<SelectValue placeholder='Fakultet' />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value='all'>Barcha fakultetlar</SelectItem>
-									<SelectItem value='cs'>Computer Science</SelectItem>
-									<SelectItem value='ds'>Data Science</SelectItem>
-								</SelectContent>
-							</Select>
-							<DropdownMenu>
-								<DropdownMenuTrigger render={<Button variant='outline' />}>
-									<Filter className='h-4 w-4' /> Saralash
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align='end'>
-									<DropdownMenuItem>Faqat grantdagilar</DropdownMenuItem>
-									<DropdownMenuItem>Faqat yuqori xavfdagilar</DropdownMenuItem>
-									<DropdownMenuItem>Jarimasi borlar</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						</div>
-					</div>
+        <Tabs defaultValue="students" className="w-full">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <TabsList className="glass-panel">
+              <TabsTrigger value="students">Talabalar</TabsTrigger>
+              <TabsTrigger value="analytics">Tahlillar</TabsTrigger>
+              <TabsTrigger value="leaderboard">Reyting</TabsTrigger>
+            </TabsList>
+            <div className="flex gap-2">
+              <Select defaultValue="all">
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Fakultet" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Barcha fakultetlar</SelectItem>
+                  <SelectItem value="cs">Computer Science</SelectItem>
+                  <SelectItem value="ds">Data Science</SelectItem>
+                </SelectContent>
+              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger render={<Button variant="outline" />}>
+                  <Filter className="h-4 w-4" /> Saralash
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>Faqat grantdagilar</DropdownMenuItem>
+                  <DropdownMenuItem>Faqat yuqori xavfdagilar</DropdownMenuItem>
+                  <DropdownMenuItem>Jarimasi borlar</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
 
-					<TabsContent value='students' className='mt-5'>
-						<Card id='grants' className='glass-panel'>
-							<CardHeader>
-								<CardTitle>Grant holatlari jadvali</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>Talaba</TableHead>
-											<TableHead>Fakultet</TableHead>
-											<TableHead>Yakuniy ball</TableHead>
-											<TableHead>Grant holati</TableHead>
-											<TableHead>Xavf darajasi</TableHead>
-											<TableHead className='text-right'>
-												O'zlashtirish
-											</TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{rows.map(row => (
-											<TableRow key={row.id}>
-												<TableCell>
-													<div className='font-medium'>{row.name}</div>
-													<div className='text-xs text-muted-foreground'>
-														{row.email}
-													</div>
-												</TableCell>
-												<TableCell>{row.faculty}</TableCell>
-												<TableCell>{row.grant.finalScore}</TableCell>
-												<TableCell>
-													<StatusBadge value={row.grant.grantStatus} />
-												</TableCell>
-												<TableCell>
-													<StatusBadge value={row.grant.riskLevel} />
-												</TableCell>
-												<TableCell className='text-right'>
-													{row.academicPercent}%
-												</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</CardContent>
-						</Card>
-					</TabsContent>
+          <TabsContent value="students" className="mt-5">
+            <Card id="grants" className="glass-panel">
+              <CardHeader>
+                <CardTitle>Grant holatlari jadvali</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Talaba</TableHead>
+                      <TableHead>Fakultet</TableHead>
+                      <TableHead>Yakuniy ball</TableHead>
+                      <TableHead>Grant holati</TableHead>
+                      <TableHead>Xavf darajasi</TableHead>
+                      <TableHead className="text-right">O'zlashtirish</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.map((row) => (
+                      <TableRow key={row.id}>
+                        <TableCell>
+                          <div className="font-medium">{row.name}</div>
+                          <div className="text-xs text-muted-foreground">{row.email}</div>
+                        </TableCell>
+                        <TableCell>{row.faculty}</TableCell>
+                        <TableCell>{row.grant.finalScore}</TableCell>
+                        <TableCell><StatusBadge value={row.grant.grantStatus} /></TableCell>
+                        <TableCell><StatusBadge value={row.grant.riskLevel} /></TableCell>
+                        <TableCell className="text-right">{row.academicPercent}%</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
 					<TabsContent value='analytics' className='mt-5'>
 						<Card className='glass-panel'>

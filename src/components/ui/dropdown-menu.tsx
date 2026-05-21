@@ -14,8 +14,12 @@ function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
   return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
 }
 
-function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
-  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
+function DropdownMenuTrigger({ children, ...props }: MenuPrimitive.Trigger.Props) {
+  return (
+    <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props}>
+      {children}
+    </MenuPrimitive.Trigger>
+  )
 }
 
 function DropdownMenuContent({
@@ -33,7 +37,7 @@ function DropdownMenuContent({
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
-        className="isolate z-50 outline-none"
+        className="isolate outline-none"
         align={align}
         alignOffset={alignOffset}
         side={side}
@@ -170,8 +174,7 @@ function DropdownMenuCheckboxItem({
         data-slot="dropdown-menu-checkbox-item-indicator"
       >
         <MenuPrimitive.CheckboxItemIndicator>
-          <CheckIcon
-          />
+          <CheckIcon />
         </MenuPrimitive.CheckboxItemIndicator>
       </span>
       {children}
@@ -211,8 +214,7 @@ function DropdownMenuRadioItem({
         data-slot="dropdown-menu-radio-item-indicator"
       >
         <MenuPrimitive.RadioItemIndicator>
-          <CheckIcon
-          />
+          <CheckIcon />
         </MenuPrimitive.RadioItemIndicator>
       </span>
       {children}

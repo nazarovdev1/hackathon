@@ -1,7 +1,7 @@
-import { CertificatesClient } from '@/components/dashboard/certificates-client'
-import { DashboardShell } from '@/components/layout/dashboard-shell'
-import { getCurrentStudentDashboard } from '@/services/dashboard-data'
-import { notFound } from 'next/navigation'
+import { notFound } from "next/navigation";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { CertificatesClient } from "@/components/dashboard/certificates-client";
+import { getCurrentStudentDashboard } from "@/services/dashboard-data";
 
 export const metadata = {
 	title: 'Sertifikatlar - PDP METRIC',
@@ -11,12 +11,12 @@ export const metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function StudentCertificatesPage() {
-	const currentStudent = await getCurrentStudentDashboard()
-	if (!currentStudent) notFound()
+  const currentStudent = await getCurrentStudentDashboard();
+  if (!currentStudent) notFound();
 
-	return (
-		<DashboardShell title='Sertifikatlar va Yutuqlar' eyebrow='Yutuqlar ombori'>
-			<CertificatesClient student={currentStudent} />
-		</DashboardShell>
-	)
+  return (
+    <DashboardShell title="Sertifikatlar va Yutuqlar" eyebrow="Yutuqlar ombori">
+      <CertificatesClient student={currentStudent} />
+    </DashboardShell>
+  );
 }

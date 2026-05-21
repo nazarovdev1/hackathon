@@ -40,37 +40,32 @@ export default async function StudentDashboardPage() {
 	const student = await getCurrentStudentDashboard()
 	if (!student) notFound()
 
-	const grant = student.grant
-	const recommendations = buildRecommendations(student.kpi, grant)
-	const leaderboard = await getLeaderboard()
-	const position =
-		leaderboard.find(item => item.id === student.id)?.position ?? 0
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "/dashboard/student";
 
-	return (
-		<DashboardShell title='Talaba paneli' eyebrow='Shaxsiy grant monitoringi'>
-			<div className='grid gap-5'>
-				<MotionPanel>
-					<div className='glass-panel rounded-lg p-5'>
-						<div className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
-							<div>
-								<p className='text-sm text-muted-foreground'>
-									{student.faculty} / {student.group}
-								</p>
-								<h2 className='mt-1 text-2xl font-semibold'>{student.name}</h2>
-							</div>
-							<div className='flex flex-wrap gap-2'>
-								<StatusBadge value={grant.grantStatus} />
-								<StatusBadge value={grant.riskLevel} />
-								<Badge
-									variant='outline'
-									className='border-primary/30 text-primary'
-								>
-									Reyting #{position}
-								</Badge>
-							</div>
-						</div>
-					</div>
-				</MotionPanel>
+  const grant = student.grant;
+  const recommendations = buildRecommendations(student.kpi, grant);
+  const leaderboard = await getLeaderboard();
+  const position = leaderboard.find((item) => item.id === student.id)?.position ?? 0;
+
+  return (
+    <DashboardShell title="Talaba paneli" eyebrow="Shaxsiy grant monitoringi" pathname={pathname}>
+      <div className="grid gap-5">
+        <MotionPanel>
+          <div className="glass-panel rounded-lg p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">{student.faculty} / {student.group}</p>
+                <h2 className="mt-1 text-2xl font-semibold">{student.name}</h2>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <StatusBadge value={grant.grantStatus} />
+                <StatusBadge value={grant.riskLevel} />
+                <Badge variant="outline" className="border-primary/30 text-primary">Reyting #{position}</Badge>
+              </div>
+            </div>
+          </div>
+        </MotionPanel>
 
 				<div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
 					<MotionPanel delay={0.03}>

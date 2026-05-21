@@ -42,7 +42,16 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  // Add full pathname (including query string) to headers for server components
+  const requestHeaders = new Headers(request.headers);
+  const fullPath = pathname + (request.nextUrl.search || "");
+  requestHeaders.set("x-pathname", fullPath);
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {

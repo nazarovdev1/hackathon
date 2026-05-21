@@ -1,21 +1,18 @@
 'use server'
 
 import {
-	approveAchievement as approveAchievementService,
-	assignRecoveryTask as assignRecoveryTaskService,
-	completeRecoveryTask as completeRecoveryTaskService,
-	createFeedback as createFeedbackService,
-	createGrantDecision as createGrantDecisionService,
-	createPenalty as createPenaltyService,
-	deleteAchievement as deleteAchievementService,
-	getAdminGrantOverview,
-	getCurrentStudentDashboard,
-	getMentorStudents,
-	getStudentGrantSnapshot,
-	updateAchievement as updateAchievementService,
-	uploadAchievement as uploadAchievementService,
-} from '@/services/dashboard-data'
-import { revalidatePath } from 'next/cache'
+  approveAchievement as approveAchievementService,
+  assignRecoveryTask as assignRecoveryTaskService,
+  completeRecoveryTask as completeRecoveryTaskService,
+  createFeedback as createFeedbackService,
+  createGrantDecision as createGrantDecisionService,
+  createPenalty as createPenaltyService,
+  getAdminGrantOverview,
+  getCurrentStudentDashboard,
+  getMentorStudents,
+  getStudentGrantSnapshot,
+  uploadAchievement as uploadAchievementService,
+} from "@/services/dashboard-data";
 
 export {
 	getAdminGrantOverview,
@@ -86,6 +83,18 @@ export async function createGrantDecision(
 	const result = await createGrantDecisionService(input)
 	revalidateDashboards()
 	return { id: result.id }
+}
+
+export async function awardAdminBonus(input: Parameters<typeof awardAdminBonusService>[0]) {
+  const result = await awardAdminBonusService(input);
+  revalidateDashboards();
+  return result;
+}
+
+export async function expelStudent(input: Parameters<typeof expelStudentService>[0]) {
+  const result = await expelStudentService(input);
+  revalidateDashboards();
+  return result;
 }
 
 export async function completeRecoveryTask(

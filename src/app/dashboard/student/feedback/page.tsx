@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, MessageSquare, Star, Calendar, StarHalf, Heart, CheckCircle2 } from "lucide-react";
+import { GraduationCap, MessageSquare, Star, Calendar, StarHalf, CheckCircle2 } from "lucide-react";
 import { MotionPanel } from "@/components/providers/motion-panel";
 import { getCurrentStudentDashboard, getCurrentStudentFeedback } from "@/services/dashboard-data";
 
@@ -26,6 +27,9 @@ type FeedbackItem = {
 export const dynamic = "force-dynamic";
 
 export default async function StudentFeedbackPage() {
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "/dashboard/student/feedback";
+
   const currentStudent = await getCurrentStudentDashboard();
   if (!currentStudent) notFound();
 
@@ -56,7 +60,7 @@ export default async function StudentFeedbackPage() {
   };
 
   return (
-    <DashboardShell title="Mentor Feedback va Baholari" eyebrow="Ustozlar fikrlari">
+    <DashboardShell title="Mentor Feedback va Baholari" eyebrow="Ustozlar fikrlari" pathname={pathname}>
       <div className="grid gap-6">
         
         {/* Yuqori qism: Statistika kartalari */}
@@ -122,7 +126,7 @@ export default async function StudentFeedbackPage() {
                 </CardContent>
               </Card>
             ) : (
-              feedbacks.map((item, idx) => (
+              feedbacks.map((item) => (
                 <Card key={item.id} className="glass-panel relative overflow-hidden transition-all hover:border-border">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
                   <CardHeader className="pb-3">

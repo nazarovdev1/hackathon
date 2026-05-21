@@ -55,12 +55,14 @@ function scoreRecord(studentId, kpi) {
     kpi.activityScore +
     kpi.tutorScore +
     kpi.disciplineScore;
-  const finalScore = mainKpi - kpi.penaltyScore + kpi.recoveryScore + kpi.employmentBonus;
+  const adminBonusScore = kpi.adminBonusScore ?? 0;
+  const finalScore = mainKpi - kpi.penaltyScore + kpi.recoveryScore + kpi.employmentBonus + adminBonusScore;
 
   return {
     studentId,
     semester,
     ...kpi,
+    adminBonusScore,
     mainKpi,
     finalScore,
     riskLevel: resolveRiskLevel(finalScore, kpi.academicPercent),

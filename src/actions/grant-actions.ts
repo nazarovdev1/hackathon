@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 import {
   approveAchievement as approveAchievementService,
   assignRecoveryTask as assignRecoveryTaskService,
+  awardAdminBonus as awardAdminBonusService,
   completeRecoveryTask as completeRecoveryTaskService,
   createFeedback as createFeedbackService,
   createGrantDecision as createGrantDecisionService,
   createPenalty as createPenaltyService,
+  expelStudent as expelStudentService,
   getAdminGrantOverview,
   getCurrentStudentDashboard,
   getMentorStudents,
@@ -58,6 +60,18 @@ export async function createGrantDecision(input: Parameters<typeof createGrantDe
   const result = await createGrantDecisionService(input);
   revalidateDashboards();
   return { id: result.id };
+}
+
+export async function awardAdminBonus(input: Parameters<typeof awardAdminBonusService>[0]) {
+  const result = await awardAdminBonusService(input);
+  revalidateDashboards();
+  return result;
+}
+
+export async function expelStudent(input: Parameters<typeof expelStudentService>[0]) {
+  const result = await expelStudentService(input);
+  revalidateDashboards();
+  return result;
 }
 
 export async function completeRecoveryTask(input: Parameters<typeof completeRecoveryTaskService>[0]) {

@@ -1,5 +1,6 @@
 import { AlertTriangle, Filter, ShieldCheck, Trophy, Users } from "lucide-react";
 import { GrantDistributionChart } from "@/components/charts/analytics-charts";
+import { AdminStudentActions } from "@/components/dashboard/admin-student-actions";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { MotionPanel } from "@/components/providers/motion-panel";
@@ -14,7 +15,14 @@ import { getAdminGrantOverview } from "@/services/dashboard-data";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminDashboardPage() {
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
+  const activeTab = tab === "grants" ? "students" : tab === "leaderboard" ? "leaderboard" : "students";
+
   const { rows, eligible, highRisk, distribution, leaderboard, total } = await getAdminGrantOverview();
 
   return (
@@ -35,7 +43,7 @@ export default async function AdminDashboardPage() {
           </MotionPanel>
         </div>
 
-        <Tabs defaultValue="students" className="w-full">
+        <Tabs defaultValue={activeTab} className="w-full">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <TabsList className="glass-panel">
               <TabsTrigger value="students">Talabalar</TabsTrigger>
@@ -79,11 +87,20 @@ export default async function AdminDashboardPage() {
                       <TableHead>Fakultet</TableHead>
                       <TableHead>Yakuniy ball</TableHead>
                       <TableHead>Grant holati</TableHead>
+                      <TableHead>Talaba holati</TableHead>
                       <TableHead>Xavf darajasi</TableHead>
                       <TableHead className="text-right">O'zlashtirish</TableHead>
+                      <TableHead className="text-right">Amallar</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
+                    {rows.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
+                          Hozircha talaba ma'lumotlari yo'q. Real yozuvlar DBga tushganda shu yerda ko'rinadi.
+                        </TableCell>
+                      </TableRow>
+                    )}
                     {rows.map((row) => (
                       <TableRow key={row.id}>
                         <TableCell>
@@ -93,8 +110,10 @@ export default async function AdminDashboardPage() {
                         <TableCell>{row.faculty}</TableCell>
                         <TableCell>{row.grant.finalScore}</TableCell>
                         <TableCell><StatusBadge value={row.grant.grantStatus} /></TableCell>
+                        <TableCell><StatusBadge value={row.status} /></TableCell>
                         <TableCell><StatusBadge value={row.grant.riskLevel} /></TableCell>
                         <TableCell className="text-right">{row.academicPercent}%</TableCell>
+                        <TableCell className="text-right"><AdminStudentActions student={row} /></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

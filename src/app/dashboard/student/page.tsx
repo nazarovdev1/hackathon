@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { Award, Gauge, GraduationCap, TrendingUp, UserCheck, Trophy, Calendar, Code, Heart, Shield } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AcademicChart, AttendanceChart } from "@/components/charts/analytics-charts";
@@ -19,13 +20,16 @@ export default async function StudentDashboardPage() {
   const student = await getCurrentStudentDashboard();
   if (!student) notFound();
 
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "/dashboard/student";
+
   const grant = student.grant;
   const recommendations = buildRecommendations(student.kpi, grant);
   const leaderboard = await getLeaderboard();
   const position = leaderboard.find((item) => item.id === student.id)?.position ?? 0;
 
   return (
-    <DashboardShell title="Talaba paneli" eyebrow="Shaxsiy grant monitoringi">
+    <DashboardShell title="Talaba paneli" eyebrow="Shaxsiy grant monitoringi" pathname={pathname}>
       <div className="grid gap-5">
         <MotionPanel>
           <div className="glass-panel rounded-lg p-5">

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { MotionPanel } from "@/components/providers/motion-panel";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";

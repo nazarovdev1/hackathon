@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { getLeaderboard } from "@/services/leaderboard";
 import { getCurrentStudentDashboard } from "@/services/dashboard-data";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
@@ -16,6 +17,9 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function StudentRatingPage() {
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "/dashboard/student/rating";
+
   const currentStudent = await getCurrentStudentDashboard();
   if (!currentStudent) notFound();
 
@@ -24,7 +28,7 @@ export default async function StudentRatingPage() {
   const currentPosition = leaderboard.find((item) => item.id === currentStudent.id)?.position ?? 0;
 
   return (
-    <DashboardShell title="Reyting jadvali" eyebrow="KPI reytingi">
+    <DashboardShell title="Reyting jadvali" eyebrow="KPI reytingi" pathname={pathname}>
       <div className="grid gap-6">
         {/* Shaxsiy o'rin kartasi */}
         <MotionPanel>
@@ -56,11 +60,6 @@ export default async function StudentRatingPage() {
         {/* Kuchli uchlik (Top 3) */}
         <div className="grid gap-4 sm:grid-cols-3">
           {leaderboard.slice(0, 3).map((item, idx) => {
-            const colors = [
-              "from-amber-400 to-yellow-600 border-amber-400/40 text-amber-600 bg-amber-500/5",
-              "from-slate-300 to-slate-500 border-slate-300/40 text-slate-500 bg-slate-500/5",
-              "from-amber-600 to-orange-700 border-amber-600/30 text-amber-700 bg-amber-700/5",
-            ];
             const medalIcons = [
               <Trophy className="h-8 w-8 text-amber-500" key="gold" />,
               <Medal className="h-8 w-8 text-slate-400" key="silver" />,

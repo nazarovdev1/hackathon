@@ -71,7 +71,7 @@ export default function Home() {
               { icon: LineChart, title: "Hard & Soft Skills", value: "Modul natijalari tahlili", desc: "Kod yozish malakasi, amaliy loyihalar va davomatni dinamik tarzda kuzating." },
               { icon: LockKeyhole, title: "Ekotizim Rollari", value: "Talaba, Mentor, Tyutor", desc: "PDP ekotizimidagi har bir ishtirokchi uchun alohida moslashtirilgan interfeyslar." },
               { icon: Users, title: "Recovery Signallari", value: "O'zlashtirish nazorati", desc: "Dasturlashda qiynalayotgan talabalarni aniqlang va qo'shimcha mashg'ulotlarga yo'naltiring." },
-            ].map((item, i) => (
+            ].map((item) => (
               <Card key={item.title} className="glass-panel group hover:bg-card/90 transition-all duration-300 hover:shadow-[0_0_30px_rgba(16,185,129,0.1)] hover:-translate-y-1 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-[40px] -mr-12 -mt-12 transition-opacity group-hover:bg-primary/10" />
                 <CardContent className="p-5">

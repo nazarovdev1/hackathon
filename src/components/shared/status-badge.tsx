@@ -8,6 +8,9 @@ const tone = {
   LOW: "border-emerald-400/40 bg-emerald-400/10 text-emerald-200",
   MEDIUM: "border-amber-400/40 bg-amber-400/10 text-amber-100",
   HIGH: "border-rose-400/40 bg-rose-400/10 text-rose-100",
+  ACTIVE: "border-emerald-400/40 bg-emerald-400/10 text-emerald-200",
+  SUSPENDED: "border-amber-400/40 bg-amber-400/10 text-amber-100",
+  EXPELLED: "border-rose-400/40 bg-rose-400/10 text-rose-100",
 } as const;
 
 export function StatusBadge({ value }: { value: keyof typeof tone }) {

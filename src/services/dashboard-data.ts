@@ -3,7 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateGrantScore, toGrantKpiInput } from "@/services/grant-engine";
-import type { GrantCalculationResult, StudentDashboardSnapshot } from "@/types/grant";
+import type { GrantCalculationResult, StudentDashboardSnapshot, StudentStatus } from "@/types/grant";
 import type { AppRole } from "@/types/auth";
 
 const latestScoreOrder = { calculatedAt: "desc" } as const;
@@ -37,8 +37,16 @@ type AdminStudentRow = {
   email: string;
   faculty: string;
   group: string;
+  status: StudentStatus;
+  statusReason: string | null;
   academicPercent: number;
   grant: GrantCalculationResult;
+  achievements: {
+    id: string;
+    title: string;
+    score: number;
+    status: "PENDING" | "APPROVED" | "REJECTED";
+  }[];
 };
 
 function formatDate(value: Date) {
@@ -71,6 +79,7 @@ function emptyKpi() {
     penalty: 0,
     recovery: 0,
     employmentBonus: 0,
+    adminBonus: 0,
     academicPercent: 0,
   };
 }
@@ -131,6 +140,8 @@ function buildStudentSnapshot(student: StudentWithDashboardData): StudentDashboa
     studentId: student.studentId,
     grantType: student.grantType,
     level: student.level,
+    status: student.status,
+    statusReason: student.statusReason,
     kpi,
     grant,
     attendanceTrend: buildAttendanceTrend(student.attendanceRecords),
@@ -206,8 +217,16 @@ function toAdminStudentRow(student: StudentWithDashboardData): AdminStudentRow {
     email: student.user.email,
     faculty: student.faculty,
     group: student.groupName,
+    status: student.status,
+    statusReason: student.statusReason,
     academicPercent: kpi.academicPercent,
     grant: calculateGrantScore(kpi),
+    achievements: student.achievements.map((achievement) => ({
+      id: achievement.id,
+      title: achievement.title,
+      score: Number(achievement.score),
+      status: achievement.status,
+    })),
   };
 }
 
@@ -490,7 +509,74 @@ export async function createGrantDecision(input: {
   });
 }
 
-type MutableScoreField = "penaltyScore" | "recoveryScore";
+export async function awardAdminBonus(input: {
+  studentId: string;
+  score: number;
+  reason: string;
+}) {
+  const user = await getSessionUser();
+  assertRole(user?.role, ["ADMIN"]);
+
+  const score = normalizeScore(input.score, 0.5, 20, "Bonus balli 0.5 va 20 oralig'ida bo'lishi kerak.");
+  const reason = input.reason.trim();
+  if (!reason) throw new Error("Bonus sababi kiritilishi kerak.");
+
+  const currentBonus = await getLatestScoreValue(input.studentId, "adminBonusScore");
+
+  const adjustment = await prisma.$transaction(async (tx) => {
+    const created = await tx.adminScoreAdjustment.create({
+      data: {
+        student: { connect: { id: input.studentId } },
+        admin: { connect: { id: user!.id } },
+        score,
+        reason,
+      },
+    });
+
+    await bumpLatestScore(tx, input.studentId, { adminBonusScore: currentBonus + score });
+    return created;
+  });
+
+  return { id: adjustment.id };
+}
+
+export async function expelStudent(input: {
+  studentId: string;
+  reason: string;
+}) {
+  const user = await getSessionUser();
+  assertRole(user?.role, ["ADMIN"]);
+
+  const reason = input.reason.trim();
+  if (!reason) throw new Error("Chetlashtirish sababi kiritilishi kerak.");
+
+  const student = await prisma.studentProfile.findUnique({
+    where: { id: input.studentId },
+    select: { id: true, userId: true, status: true },
+  });
+  if (!student) throw new Error("Talaba topilmadi.");
+  if (student.status === "EXPELLED") throw new Error("Talaba allaqachon chetlashtirilgan.");
+
+  await prisma.$transaction([
+    prisma.studentProfile.update({
+      where: { id: input.studentId },
+      data: {
+        status: "EXPELLED",
+        statusReason: reason,
+        statusChangedAt: new Date(),
+        statusChangedById: user!.id,
+      },
+    }),
+    prisma.user.update({
+      where: { id: student.userId },
+      data: { isActive: false },
+    }),
+  ]);
+
+  return { id: student.id };
+}
+
+type MutableScoreField = "penaltyScore" | "recoveryScore" | "adminBonusScore";
 
 function normalizeScore(value: number, min: number, max: number, message: string) {
   if (!Number.isFinite(value) || value < min || value > max) {
@@ -549,6 +635,7 @@ async function bumpLatestScore(
     penalty: data.penaltyScore ?? Number(record.penaltyScore),
     recovery: data.recoveryScore ?? Number(record.recoveryScore),
     employmentBonus: Number(record.employmentBonus),
+    adminBonus: data.adminBonusScore ?? Number(record.adminBonusScore),
     academicPercent: Number(record.academicPercent),
   };
   const grant = calculateGrantScore(next);

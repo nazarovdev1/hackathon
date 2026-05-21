@@ -2,6 +2,8 @@ export type GrantStatus = "ELIGIBLE" | "RISK" | "DENIED";
 
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH";
 
+export type StudentStatus = "ACTIVE" | "SUSPENDED" | "EXPELLED";
+
 export type GrantKpiInput = {
   academic: number;
   attendance: number;
@@ -12,6 +14,7 @@ export type GrantKpiInput = {
   penalty: number;
   recovery: number;
   employmentBonus: number;
+  adminBonus: number;
   academicPercent: number;
 };
 
@@ -43,6 +46,8 @@ export type StudentDashboardSnapshot = {
   studentId: string;
   grantType: string;
   level: string;
+  status: StudentStatus;
+  statusReason: string | null;
   kpi: GrantKpiInput;
   grant: GrantCalculationResult;
   attendanceTrend: AttendanceTrendPoint[];

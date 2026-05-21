@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="uz" className="h-full antialiased" suppressHydrationWarning>
-      <body className="min-h-full bg-background text-foreground transition-colors duration-200">
+      <body className="min-h-full bg-background text-foreground transition-colors duration-200" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu, Search, LogOut, User, Settings } from "lucide-react";
 import { dashboardNavigation } from "@/constants/navigation";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -17,8 +16,35 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { prisma } from "@/lib/prisma";
+import { headers } from "next/headers";
 
-function NavigationList({ role, pathname }: { role: string; pathname: string }) {
+function isActivePath(currentPath: string | undefined, navHref: string) {
+  if (!currentPath) return false;
+
+  // Strip query string from navHref to get just the pathname part
+  const navHrefPath = navHref.split("?")[0].split("#")[0];
+  const navHrefQuery = navHref.includes("?") ? navHref.split("?")[1] : null;
+
+  // If navHref has no hash and no query, do simple path match
+  if (!navHrefQuery && !navHref.includes("#")) {
+    // Special case: exact match for /dashboard/student to avoid prefix matching
+    if (navHref === "/dashboard/student") {
+      return currentPath === "/dashboard/student";
+    }
+    return currentPath === navHref || currentPath.startsWith(navHref + "/");
+  }
+
+  // If navHref has a hash anchor (legacy support)
+  if (navHref.includes("#") && !navHrefQuery) {
+    return currentPath === navHrefPath;
+  }
+
+  // If navHref has query params — currentPath must match path (query checked separately)
+  // We treat it as active only if the full navHref matches exactly
+  return currentPath === navHref || currentPath === navHrefPath + "?" + navHrefQuery;
+}
+
+function NavigationList({ role, pathname }: { role: string; pathname?: string }) {
   const filteredNav = dashboardNavigation.filter((item) =>
     (item.roles as readonly string[]).includes(role)
   );
@@ -26,7 +52,7 @@ function NavigationList({ role, pathname }: { role: string; pathname: string }) 
   return (
     <nav className="grid gap-1">
       {filteredNav.map((item) => {
-        const isActive = pathname === item.href || (item.href !== "/dashboard/student" && pathname.startsWith(item.href));
+        const isActive = isActivePath(pathname, item.href);
         return (
           <Link
             key={item.href}
@@ -59,11 +85,15 @@ export async function DashboardShell({
   children,
   title,
   eyebrow,
+  pathname,
 }: {
   children: React.ReactNode;
   title: string;
   eyebrow: string;
+  pathname?: string;
 }) {
+  const headersList = await headers();
+  const activePathname = pathname || headersList.get("x-pathname") || undefined;
   const session = await getServerSession(authOptions);
   const role = session?.user?.role || "STUDENT";
   const userName = session?.user?.name || "Foydalanuvchi";
@@ -81,8 +111,6 @@ export async function DashboardShell({
     }
   }
 
-  const pathname = "/dashboard/student";
-
   return (
     <div className="metric-grid min-h-screen">
       <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-border/40 bg-sidebar/70 p-5 backdrop-blur-xl lg:block">
@@ -96,13 +124,15 @@ export async function DashboardShell({
           </span>
         </Link>
         <div className="mt-8">
-          <NavigationList role={role} pathname={pathname} />
+          <NavigationList role={role} pathname={activePathname} />
         </div>
 
         <div className="absolute bottom-5 left-5 right-5">
           <DropdownMenu>
-            <DropdownMenuTrigger render={
-              <button className="flex w-full items-center gap-3 rounded-lg border border-border/40 bg-secondary/30 p-3 text-left transition hover:bg-secondary/50">
+            <DropdownMenuTrigger
+              nativeButton={false}
+              render={<div className="flex w-full items-center gap-3 rounded-lg border border-border/40 bg-secondary/30 p-3 text-left transition hover:bg-secondary/50 cursor-pointer" />}
+            >
                 {avatarUrl ? (
                   <Image
                     src={avatarUrl}
@@ -122,8 +152,7 @@ export async function DashboardShell({
                     {studentInfo ? `${studentInfo.group}` : role}
                   </p>
                 </div>
-              </button>
-            } />
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col gap-1">
@@ -162,11 +191,16 @@ export async function DashboardShell({
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border/40 bg-background/70 px-4 backdrop-blur-xl sm:px-6">
           <div className="flex items-center gap-3">
             <Sheet>
-              <SheetTrigger render={<Button variant="outline" size="icon" className="lg:hidden" />}>
+              <SheetTrigger
+                nativeButton={false}
+                render={
+                  <div className="lg:hidden cursor-pointer flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background hover:bg-muted transition-all" />
+                }
+              >
                 <Menu className="h-4 w-4" />
               </SheetTrigger>
               <SheetContent side="left" className="w-72">
-                <NavigationList role={role} pathname={pathname} />
+                <NavigationList role={role} pathname={activePathname} />
               </SheetContent>
             </Sheet>
             <div>
@@ -181,8 +215,10 @@ export async function DashboardShell({
             </div>
             <ThemeToggle />
             <DropdownMenu>
-              <DropdownMenuTrigger render={
-                <button className="flex items-center gap-2 rounded-full border border-border/40 bg-secondary/30 p-1 pr-3 transition hover:bg-secondary/50">
+              <DropdownMenuTrigger
+                nativeButton={false}
+                render={<div className="flex items-center gap-2 rounded-full border border-border/40 bg-secondary/30 p-1 pr-3 transition hover:bg-secondary/50 cursor-pointer" />}
+              >
                   {avatarUrl ? (
                     <Image
                       src={avatarUrl}
@@ -197,8 +233,7 @@ export async function DashboardShell({
                     </span>
                   )}
                   <span className="hidden text-sm font-medium sm:inline">{userName.split(" ")[0]}</span>
-                </button>
-              } />
+              </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col gap-1">

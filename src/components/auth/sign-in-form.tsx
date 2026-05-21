@@ -130,12 +130,7 @@ export function SignInForm() {
 					)}
 				</CardContent>
 				<CardFooter className='flex flex-col gap-4 bg-transparent border-t-0 pb-6 pt-2'>
-					<Button
-						className='w-full'
-						type='button'
-						disabled={isLoading}
-						onClick={submitCredentials}
-					>
+					<Button className='w-full' type='submit' disabled={isLoading}>
 						{isLoading ? (
 							<Loader2 className='mr-2 h-4 w-4 animate-spin' />
 						) : (

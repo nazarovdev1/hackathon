@@ -42,6 +42,7 @@ type AccountKey = keyof typeof accounts
 export function DemoSignIn() {
 	const [role, setRole] = useState<AccountKey>('STUDENT')
 	const account = accounts[role]
+
 	if (process.env.NODE_ENV === 'production') return null
 
 	return (

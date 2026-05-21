@@ -1,7 +1,7 @@
+import { notFound } from 'next/navigation'
 import { CertificatesClient } from '@/components/dashboard/certificates-client'
 import { DashboardShell } from '@/components/layout/dashboard-shell'
 import { getCurrentStudentDashboard } from '@/services/dashboard-data'
-import { notFound } from 'next/navigation'
 
 export const metadata = {
 	title: 'Sertifikatlar - PDP METRIC',

@@ -1,3 +1,5 @@
+import { LogoutButton } from '@/components/auth/logout-button'
+import DashboardNavigation from '@/components/layout/dashboard-navigation'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,49 +12,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { dashboardNavigation } from '@/constants/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { LogOut, Menu, Search, Settings, User } from 'lucide-react'
+import { Menu, Search, Settings, User } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import Image from 'next/image'
 import Link from 'next/link'
-
-function NavigationList({
-	role,
-	pathname,
-}: {
-	role: string
-	pathname: string
-}) {
-	const filteredNav = dashboardNavigation.filter(item =>
-		(item.roles as readonly string[]).includes(role),
-	)
-
-	return (
-		<nav className='grid gap-1'>
-			{filteredNav.map(item => {
-				const isActive =
-					pathname === item.href ||
-					(item.href !== '/dashboard/student' && pathname.startsWith(item.href))
-				return (
-					<Link
-						key={item.href}
-						href={item.href}
-						className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition ${
-							isActive
-								? 'bg-primary/10 font-medium text-primary'
-								: 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-						}`}
-					>
-						<item.icon className='h-4 w-4' />
-						{item.title}
-					</Link>
-				)
-			})}
-		</nav>
-	)
-}
 
 function getInitials(name: string) {
 	return name
@@ -89,19 +54,47 @@ export async function DashboardShell({
 		}
 	}
 
-	const pathname = '/dashboard/student'
+	const userMenu = (
+		<DropdownMenuContent align='end' className='w-56'>
+			<DropdownMenuLabel>
+				<div className='flex flex-col gap-1'>
+					<span className='font-medium'>{userName}</span>
+					<span className='text-xs font-normal text-muted-foreground'>
+						{userEmail}
+					</span>
+				</div>
+			</DropdownMenuLabel>
+			<DropdownMenuSeparator />
+			<DropdownMenuItem>
+				<Link href='/dashboard/profile' className='flex w-full items-center'>
+					<User className='mr-2 h-4 w-4' />
+					Profil
+				</Link>
+			</DropdownMenuItem>
+			<DropdownMenuItem>
+				<Link href='/dashboard/settings' className='flex w-full items-center'>
+					<Settings className='mr-2 h-4 w-4' />
+					Sozlamalar
+				</Link>
+			</DropdownMenuItem>
+			<DropdownMenuSeparator />
+			<DropdownMenuItem>
+				<LogoutButton />
+			</DropdownMenuItem>
+		</DropdownMenuContent>
+	)
 
 	return (
 		<div className='metric-grid min-h-screen'>
 			<aside className='fixed inset-y-0 left-0 hidden w-72 border-r border-border/40 bg-sidebar/70 p-5 backdrop-blur-xl lg:block'>
 				<Link href='/' className='flex items-center gap-3'>
-					<span className='flex h-10 w-10 items-center justify-center rounded-full shadow-[0_0_24px_rgba(16,185,129,0.35)] overflow-hidden bg-white'>
+					<span className='flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_0_24px_rgba(16,185,129,0.35)]'>
 						<Image
 							src='/pdp-logo.jpg'
 							alt='PDP Logo'
 							width={40}
 							height={40}
-							className='object-cover scale-[1.3]'
+							className='scale-[1.3] object-cover'
 						/>
 					</span>
 					<span>
@@ -113,8 +106,9 @@ export async function DashboardShell({
 						</span>
 					</span>
 				</Link>
+
 				<div className='mt-8'>
-					<NavigationList role={role} pathname={pathname} />
+					<DashboardNavigation role={role} />
 				</div>
 
 				<div className='absolute bottom-5 left-5 right-5'>
@@ -138,57 +132,13 @@ export async function DashboardShell({
 									<div className='min-w-0 flex-1'>
 										<p className='truncate text-sm font-medium'>{userName}</p>
 										<p className='truncate text-xs text-muted-foreground'>
-											{studentInfo ? `${studentInfo.group}` : role}
+											{studentInfo ? studentInfo.group : role}
 										</p>
 									</div>
 								</button>
 							}
 						/>
-						<DropdownMenuContent align='end' className='w-56'>
-							<DropdownMenuLabel>
-								<div className='flex flex-col gap-1'>
-									<span className='font-medium'>{userName}</span>
-									<span className='text-xs font-normal text-muted-foreground'>
-										{userEmail}
-									</span>
-								</div>
-							</DropdownMenuLabel>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem>
-								<Link
-									href='/dashboard/student/profile'
-									className='flex w-full items-center cursor-pointer'
-								>
-									<User className='mr-2 h-4 w-4' />
-									Profil
-								</Link>
-							</DropdownMenuItem>
-							<DropdownMenuItem>
-								<Link
-									href='/dashboard/settings'
-									className='flex w-full items-center cursor-pointer'
-								>
-									<Settings className='mr-2 h-4 w-4' />
-									Sozlamalar
-								</Link>
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem>
-								<form
-									action='/api/auth/signout'
-									method='POST'
-									className='w-full'
-								>
-									<button
-										type='submit'
-										className='flex w-full items-center cursor-pointer text-rose-600 dark:text-rose-400'
-									>
-										<LogOut className='mr-2 h-4 w-4' />
-										Chiqish
-									</button>
-								</form>
-							</DropdownMenuItem>
-						</DropdownMenuContent>
+						{userMenu}
 					</DropdownMenu>
 				</div>
 			</aside>
@@ -205,7 +155,7 @@ export async function DashboardShell({
 								<Menu className='h-4 w-4' />
 							</SheetTrigger>
 							<SheetContent side='left' className='w-72'>
-								<NavigationList role={role} pathname={pathname} />
+								<DashboardNavigation role={role} />
 							</SheetContent>
 						</Sheet>
 						<div>
@@ -215,6 +165,7 @@ export async function DashboardShell({
 							<h1 className='text-lg font-semibold sm:text-xl'>{title}</h1>
 						</div>
 					</div>
+
 					<div className='flex items-center gap-3'>
 						<div className='hidden w-80 items-center gap-2 rounded-md border border-border/40 bg-secondary/50 px-3 md:flex'>
 							<Search className='h-4 w-4 text-muted-foreground' />
@@ -247,51 +198,7 @@ export async function DashboardShell({
 									</button>
 								}
 							/>
-							<DropdownMenuContent align='end' className='w-56'>
-								<DropdownMenuLabel>
-									<div className='flex flex-col gap-1'>
-										<span className='font-medium'>{userName}</span>
-										<span className='text-xs font-normal text-muted-foreground'>
-											{userEmail}
-										</span>
-									</div>
-								</DropdownMenuLabel>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem>
-									<Link
-										href='/dashboard/student/profile'
-										className='flex w-full items-center cursor-pointer'
-									>
-										<User className='mr-2 h-4 w-4' />
-										Profil
-									</Link>
-								</DropdownMenuItem>
-								<DropdownMenuItem>
-									<Link
-										href='/dashboard/settings'
-										className='flex w-full items-center cursor-pointer'
-									>
-										<Settings className='mr-2 h-4 w-4' />
-										Sozlamalar
-									</Link>
-								</DropdownMenuItem>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem>
-									<form
-										action='/api/auth/signout'
-										method='POST'
-										className='w-full'
-									>
-										<button
-											type='submit'
-											className='flex w-full items-center cursor-pointer text-rose-600 dark:text-rose-400'
-										>
-											<LogOut className='mr-2 h-4 w-4' />
-											Chiqish
-										</button>
-									</form>
-								</DropdownMenuItem>
-							</DropdownMenuContent>
+							{userMenu}
 						</DropdownMenu>
 					</div>
 				</header>

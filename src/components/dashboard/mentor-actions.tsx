@@ -51,6 +51,24 @@ export function MentorStudentActions({
 	const [feedbackMessage, setFeedbackMessage] = useState(
 		buildDefaultFeedback(student),
 	)
+	const [feedbackType, setFeedbackType] = useState<
+		'GENERAL' | 'TUTOR' | 'DISCIPLINE' | 'ACTIVITY'
+	>('GENERAL')
+	const [feedbackScore, setFeedbackScore] = useState<number>(0)
+
+	const maxFeedbackScore = useMemo(() => {
+		if (feedbackType === 'TUTOR') return 5
+		if (feedbackType === 'DISCIPLINE') return 10
+		if (feedbackType === 'ACTIVITY') return 10
+		return 0
+	}, [feedbackType])
+
+	const currentFeedbackScore = useMemo(() => {
+		if (feedbackType === 'TUTOR') return student.kpi.tutor
+		if (feedbackType === 'DISCIPLINE') return student.kpi.discipline
+		if (feedbackType === 'ACTIVITY') return student.kpi.activity
+		return 0
+	}, [feedbackType, student.kpi])
 	const [recoveryTitle, setRecoveryTitle] = useState('Recovery vazifasi')
 	const [recoveryDescription, setRecoveryDescription] = useState(
 		buildDefaultRecovery(student),
@@ -93,15 +111,17 @@ export function MentorStudentActions({
 
 	function submitFeedback() {
 		if (!feedbackMessage.trim()) return
+		const scoreToSend = feedbackType !== 'GENERAL' ? feedbackScore : undefined
 		runAction(
 			() =>
 				createFeedback({
 					studentId: student.id,
-					type: 'GENERAL',
+					type: feedbackType,
 					subject: feedbackSubject,
 					message: feedbackMessage,
+					score: scoreToSend,
 				}),
-			'Tavsiya saqlandi.',
+			'Feedback va ball muvaffaqiyatli saqlandi.',
 		)
 	}
 
@@ -146,7 +166,7 @@ export function MentorStudentActions({
 				<Button
 					size='sm'
 					variant='outline'
-					className='border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/10'
+					className='border-cyan-500/50 text-cyan-700 hover:bg-cyan-500/10'
 					onClick={() => setDialog('feedback')}
 				>
 					<MessageSquare className='mr-1 h-3.5 w-3.5' /> Tavsiya
@@ -167,7 +187,7 @@ export function MentorStudentActions({
 				<Button
 					size='sm'
 					variant='outline'
-					className='border-rose-500/20 text-rose-300 hover:bg-rose-500/10'
+					className='border-rose-500/50 text-rose-700 hover:bg-rose-500/10'
 					onClick={() => setDialog('penalty')}
 					disabled={penaltyLimit <= 0}
 					title={
@@ -204,6 +224,40 @@ export function MentorStudentActions({
 						className='grid gap-4'
 						onSubmit={event => event.preventDefault()}
 					>
+						<Field label='Tavsiya turi'>
+							<select
+								value={feedbackType}
+								onChange={event => {
+									const type = event.target.value as typeof feedbackType
+									setFeedbackType(type)
+									if (type === 'TUTOR') setFeedbackScore(student.kpi.tutor)
+									else if (type === 'DISCIPLINE') setFeedbackScore(student.kpi.discipline)
+									else if (type === 'ACTIVITY') setFeedbackScore(student.kpi.activity)
+									else setFeedbackScore(0)
+								}}
+								className='h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm'
+							>
+								<option value='GENERAL'>Umumiy tavsiya (ballga ta'sir qilmaydi)</option>
+								<option value='TUTOR'>Ijtimoiy mas'uliyat bahosi (Max: 5 ball)</option>
+								<option value='DISCIPLINE'>Korporativ madaniyat/Intizom bahosi (Max: 10 ball)</option>
+								<option value='ACTIVITY'>Faollik va sertifikatlar bahosi (Max: 10 ball)</option>
+							</select>
+						</Field>
+
+						{feedbackType !== 'GENERAL' && (
+							<Field label={`Baholash (Ball) — Max: ${maxFeedbackScore} (Joriy ball: ${currentFeedbackScore})`}>
+								<Input
+									type='number'
+									min={0}
+									max={maxFeedbackScore}
+									step='0.5'
+									value={feedbackScore}
+									onChange={event => setFeedbackScore(Number(event.target.value))}
+									required
+								/>
+							</Field>
+						)}
+
 						<Field label='Mavzu'>
 							<Input
 								value={feedbackSubject}

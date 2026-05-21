@@ -1,3 +1,4 @@
+import { AlertTriangle, Filter, ShieldCheck, Trophy, Users } from 'lucide-react'
 import { GrantDistributionChart } from '@/components/charts/analytics-charts'
 import { AdminStudentActions } from '@/components/dashboard/admin-student-actions'
 import { MetricCard } from '@/components/dashboard/metric-card'
@@ -29,7 +30,6 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getAdminGrantOverview } from '@/services/dashboard-data'
-import { AlertTriangle, Filter, ShieldCheck, Trophy, Users } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,7 +44,10 @@ export default async function AdminDashboardPage({
 			? 'students'
 			: tab === 'leaderboard'
 				? 'leaderboard'
-				: 'students'
+				: tab === 'analytics'
+					? 'analytics'
+					: 'students'
+
 	const { rows, eligible, highRisk, distribution, leaderboard, total } =
 		await getAdminGrantOverview()
 
@@ -135,9 +138,7 @@ export default async function AdminDashboardPage({
 											<TableHead>Grant holati</TableHead>
 											<TableHead>Talaba holati</TableHead>
 											<TableHead>Xavf darajasi</TableHead>
-											<TableHead className='text-right'>
-												O'zlashtirish
-											</TableHead>
+											<TableHead className='text-right'>O'zlashtirish</TableHead>
 											<TableHead className='text-right'>Amallar</TableHead>
 										</TableRow>
 									</TableHeader>
@@ -148,8 +149,7 @@ export default async function AdminDashboardPage({
 													colSpan={8}
 													className='py-8 text-center text-sm text-muted-foreground'
 												>
-													Hozircha talaba ma'lumotlari yo'q. Real yozuvlar
-													DBga tushganda shu yerda ko'rinadi.
+													Hozircha talaba ma'lumotlari yo'q.
 												</TableCell>
 											</TableRow>
 										)}

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getCachedServerSession } from '@/lib/session'
 import { revalidatePath } from 'next/cache'
 import bcrypt from 'bcryptjs'
+import type { Prisma } from '@prisma/client'
 
 function revalidateDashboards() {
 	revalidatePath('/dashboard/admin')
@@ -81,7 +82,7 @@ export async function createMentorUser(data: {
 
 	const passwordHash = await bcrypt.hash(data.passwordHash, 10)
 
-	const user = await prisma.$transaction(async (tx) => {
+	const user = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
 		const createdUser = await tx.user.create({
 			data: {
 				fullName: data.fullName,
@@ -154,7 +155,7 @@ export async function createStudentUser(data: {
 	const passwordHash = await bcrypt.hash(data.passwordHash, 10)
 	const gpaPercent = Number(data.currentGpaPercent || 85)
 
-	const user = await prisma.$transaction(async (tx) => {
+	const user = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
 		let mentorId = data.mentorId || null
 		if (!mentorId) {
 			const sibling = await tx.studentProfile.findFirst({
@@ -256,7 +257,7 @@ export async function createGroup(data: {
 		throw new Error('Guruh nomini kiriting.')
 	}
 
-	await prisma.$transaction(async (tx) => {
+	await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
 		// If tutorId is provided, update tutor profile assignedGroup
 		if (data.tutorId) {
 			await tx.tutorProfile.updateMany({
@@ -315,7 +316,7 @@ export async function assignTutorToGroup(data: {
 		throw new Error('Guruh nomi va tyutorni belgilang.')
 	}
 
-	await prisma.$transaction(async (tx) => {
+	await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
 		// Update student profiles in that group to point to this tutor
 		await tx.studentProfile.updateMany({
 			where: { groupName: data.groupName },

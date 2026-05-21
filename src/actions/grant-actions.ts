@@ -16,6 +16,7 @@ import {
 	uploadAchievement as uploadAchievementService,
 } from '@/services/dashboard-data'
 import { revalidatePath } from 'next/cache'
+import type { Prisma } from '@prisma/client'
 
 export {
 	getAdminGrantOverview,
@@ -122,7 +123,7 @@ export async function awardAdminBonus(input: {
 		throw new Error("Bonus ball 0.5 va 20 oralig'ida bo'lishi kerak.")
 	}
 
-	await prisma.$transaction(async tx => {
+	await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
 		await tx.adminScoreAdjustment.create({
 			data: {
 				studentId: input.studentId,
@@ -180,7 +181,7 @@ export async function expelStudent(input: {
 		throw new Error('Unauthorized')
 	}
 
-	await prisma.$transaction(async tx => {
+	await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
 		const student = await tx.studentProfile.findUnique({
 			where: { id: input.studentId },
 			select: { userId: true }

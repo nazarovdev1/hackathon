@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getCachedServerSession } from '@/lib/session'
 import { revalidatePath } from 'next/cache'
 import bcrypt from 'bcryptjs'
-import type { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 
 function revalidateDashboards() {
 	revalidatePath('/dashboard/admin')

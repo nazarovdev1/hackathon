@@ -16,7 +16,7 @@ import {
 	uploadAchievement as uploadAchievementService,
 } from '@/services/dashboard-data'
 import { revalidatePath } from 'next/cache'
-import type { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 
 export {
 	getAdminGrantOverview,

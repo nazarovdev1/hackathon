@@ -1,18 +1,21 @@
 'use server'
 
 import {
-  approveAchievement as approveAchievementService,
-  assignRecoveryTask as assignRecoveryTaskService,
-  completeRecoveryTask as completeRecoveryTaskService,
-  createFeedback as createFeedbackService,
-  createGrantDecision as createGrantDecisionService,
-  createPenalty as createPenaltyService,
-  getAdminGrantOverview,
-  getCurrentStudentDashboard,
-  getMentorStudents,
-  getStudentGrantSnapshot,
-  uploadAchievement as uploadAchievementService,
-} from "@/services/dashboard-data";
+	approveAchievement as approveAchievementService,
+	assignRecoveryTask as assignRecoveryTaskService,
+	completeRecoveryTask as completeRecoveryTaskService,
+	createFeedback as createFeedbackService,
+	createGrantDecision as createGrantDecisionService,
+	createPenalty as createPenaltyService,
+	deleteAchievement as deleteAchievementService,
+	getAdminGrantOverview,
+	getCurrentStudentDashboard,
+	getMentorStudents,
+	getStudentGrantSnapshot,
+	updateAchievement as updateAchievementService,
+	uploadAchievement as uploadAchievementService,
+} from '@/services/dashboard-data'
+import { revalidatePath } from 'next/cache'
 
 export {
 	getAdminGrantOverview,
@@ -85,18 +88,6 @@ export async function createGrantDecision(
 	return { id: result.id }
 }
 
-export async function awardAdminBonus(input: Parameters<typeof awardAdminBonusService>[0]) {
-  const result = await awardAdminBonusService(input);
-  revalidateDashboards();
-  return result;
-}
-
-export async function expelStudent(input: Parameters<typeof expelStudentService>[0]) {
-  const result = await expelStudentService(input);
-  revalidateDashboards();
-  return result;
-}
-
 export async function completeRecoveryTask(
 	input: Parameters<typeof completeRecoveryTaskService>[0],
 ) {
@@ -111,4 +102,23 @@ function revalidateDashboards() {
 	revalidatePath('/dashboard/student')
 	revalidatePath('/dashboard/student/feedback')
 	revalidatePath('/dashboard/student/rating')
+}
+
+// Stub implementations for admin actions that are implemented elsewhere.
+// These exist so UI imports don't fail; implement real logic in services if needed.
+export async function awardAdminBonus(_input: {
+	studentId: string
+	score: number
+	reason: string
+}) {
+	void _input
+	throw new Error('awardAdminBonus is not implemented on this environment')
+}
+
+export async function expelStudent(_input: {
+	studentId: string
+	reason?: string
+}) {
+	void _input
+	throw new Error('expelStudent is not implemented on this environment')
 }

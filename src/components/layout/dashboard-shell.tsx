@@ -1,3 +1,4 @@
+import { LogoutButton } from '@/components/auth/logout-button'
 import DashboardNavigation from '@/components/layout/dashboard-navigation'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { LogOut, Menu, Search, Settings, User } from 'lucide-react'
+import { Menu, Search, Settings, User } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -118,7 +119,7 @@ export async function DashboardShell({
 							<DropdownMenuSeparator />
 							<DropdownMenuItem>
 								<Link
-									href='/dashboard/student/profile'
+									href='/dashboard/profile'
 									className='flex w-full items-center cursor-pointer'
 								>
 									<User className='mr-2 h-4 w-4' />
@@ -136,19 +137,7 @@ export async function DashboardShell({
 							</DropdownMenuItem>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem>
-								<form
-									action='/api/auth/signout'
-									method='POST'
-									className='w-full'
-								>
-									<button
-										type='submit'
-										className='flex w-full items-center cursor-pointer text-rose-600 dark:text-rose-400'
-									>
-										<LogOut className='mr-2 h-4 w-4' />
-										Chiqish
-									</button>
-								</form>
+								<LogoutButton />
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
@@ -221,7 +210,7 @@ export async function DashboardShell({
 								<DropdownMenuSeparator />
 								<DropdownMenuItem>
 									<Link
-										href='/dashboard/student/profile'
+										href='/dashboard/profile'
 										className='flex w-full items-center cursor-pointer'
 									>
 										<User className='mr-2 h-4 w-4' />
@@ -239,19 +228,7 @@ export async function DashboardShell({
 								</DropdownMenuItem>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem>
-									<form
-										action='/api/auth/signout'
-										method='POST'
-										className='w-full'
-									>
-										<button
-											type='submit'
-											className='flex w-full items-center cursor-pointer text-rose-600 dark:text-rose-400'
-										>
-											<LogOut className='mr-2 h-4 w-4' />
-											Chiqish
-										</button>
-									</form>
+									<LogoutButton />
 								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>

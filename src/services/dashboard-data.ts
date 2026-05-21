@@ -76,6 +76,7 @@ function emptyKpi() {
 		penalty: 0,
 		recovery: 0,
 		employmentBonus: 0,
+		adminBonus: 0,
 		academicPercent: 0,
 	}
 }
@@ -151,6 +152,8 @@ function buildStudentSnapshot(
 		email: student.user.email,
 		faculty: student.faculty,
 		group: student.groupName,
+		status: (student as any).status,
+		statusReason: (student as any).statusReason ?? null,
 		studentId: student.studentId,
 		grantType: student.grantType,
 		level: student.level,
@@ -268,18 +271,48 @@ export async function getAdminGrantOverview() {
 
 export async function getLeaderboard() {
 	const students = await prisma.studentProfile.findMany({
-		include: studentInclude,
+		select: {
+			id: true,
+			groupName: true,
+			faculty: true,
+			level: true,
+			user: {
+				select: {
+					email: true,
+					fullName: true,
+				},
+			},
+			mentor: {
+				select: {
+					fullName: true,
+				},
+			},
+			scoreRecords: {
+				orderBy: { calculatedAt: 'desc' },
+				take: 1,
+				select: {
+					mainKpi: true,
+					finalScore: true,
+				},
+			},
+		},
 		orderBy: { createdAt: 'asc' },
 	})
 
 	return students
-		.map(toAdminStudentRow)
-		.map(row => ({
-			id: row.id,
-			name: row.name,
-			faculty: row.faculty,
-			score: row.grant.finalScore,
-		}))
+		.map(student => {
+			const latestScore = student.scoreRecords[0]
+			const score = Math.min(100, Number(latestScore?.finalScore ?? 0))
+			return {
+				id: student.id,
+				name: student.user.fullName,
+				faculty: student.faculty,
+				group: student.groupName,
+				level: student.level,
+				mentorName: student.mentor?.fullName ?? 'Biriktirilmagan',
+				score,
+			}
+		})
 		.sort((a, b) => b.score - a.score)
 		.map((student, index) => ({ ...student, position: index + 1 }))
 }
@@ -358,16 +391,33 @@ export async function createFeedback(input: {
 	assertRole(user?.role, ['MENTOR', 'TUTOR', 'ADMIN'])
 	await assertStudentAccess(user!, input.studentId)
 
-	const feedback = await prisma.feedback.create({
-		data: {
-			student: { connect: { id: input.studentId } },
-			author: { connect: { id: user!.id } },
-			message: input.message,
-			type: input.type,
-			subject: input.subject,
-			grade: input.grade,
-			score: input.score,
-		},
+	const feedback = await prisma.$transaction(async tx => {
+		const created = await tx.feedback.create({
+			data: {
+				student: { connect: { id: input.studentId } },
+				author: { connect: { id: user!.id } },
+				message: input.message,
+				type: input.type,
+				subject: input.subject,
+				grade: input.grade,
+				score: input.score,
+			},
+		})
+
+		if (input.score !== undefined && input.score !== null) {
+			let field: MutableScoreField | null = null
+			if (input.type === 'TUTOR') field = 'tutorScore'
+			else if (input.type === 'DISCIPLINE') field = 'disciplineScore'
+			else if (input.type === 'ACTIVITY') field = 'activityScore'
+
+			if (field) {
+				await bumpLatestScore(tx, input.studentId, {
+					[field]: input.score,
+				})
+			}
+		}
+
+		return created
 	})
 
 	return { id: feedback.id }
@@ -611,7 +661,12 @@ export async function createGrantDecision(input: {
 	})
 }
 
-type MutableScoreField = 'penaltyScore' | 'recoveryScore'
+type MutableScoreField =
+	| 'penaltyScore'
+	| 'recoveryScore'
+	| 'tutorScore'
+	| 'disciplineScore'
+	| 'activityScore'
 
 function normalizeScore(
 	value: number,
@@ -676,12 +731,13 @@ async function bumpLatestScore(
 		academic: Number(record.academicScore),
 		attendance: Number(record.attendanceScore),
 		assignment: Number(record.assignmentScore),
-		activity: Number(record.activityScore),
-		tutor: Number(record.tutorScore),
-		discipline: Number(record.disciplineScore),
+		activity: data.activityScore ?? Number(record.activityScore),
+		tutor: data.tutorScore ?? Number(record.tutorScore),
+		discipline: data.disciplineScore ?? Number(record.disciplineScore),
 		penalty: data.penaltyScore ?? Number(record.penaltyScore),
 		recovery: data.recoveryScore ?? Number(record.recoveryScore),
 		employmentBonus: Number(record.employmentBonus),
+		adminBonus: Number((record as any).adminBonusScore ?? 0),
 		academicPercent: Number(record.academicPercent),
 	}
 	const grant = calculateGrantScore(next)

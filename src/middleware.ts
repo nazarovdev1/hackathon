@@ -28,8 +28,8 @@ export async function middleware(request: NextRequest) {
     if (role !== "STUDENT" && role !== "ADMIN") {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
-  } else if (pathname.startsWith("/dashboard/settings")) {
-    // Settings accessible to all authenticated users
+  } else if (pathname.startsWith("/dashboard/settings") || pathname.startsWith("/dashboard/profile")) {
+    // Settings and Profile accessible to all authenticated users
   } else {
     // Generic paths like /dashboard or any unmapped /dashboard/* routes
     // Redirect the user to their default dashboard homepage based on their role

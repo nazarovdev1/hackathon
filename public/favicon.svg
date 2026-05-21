@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <style>
+      .outer-circle { fill: #3d9b92; }
+      .inner-white { fill: #f5f5f5; }
+      .accent-yellow { fill: #ffd700; }
+    </style>
+  </defs>
+  
+  <!-- Outer teal circle -->
+  <circle cx="100" cy="100" r="100" class="outer-circle"/>
+  
+  <!-- Inner white circle (full) -->
+  <circle cx="100" cy="100" r="75" class="inner-white"/>
+  
+  <!-- Yellow accent (bottom half) -->
+  <ellipse cx="100" cy="115" rx="60" ry="55" class="accent-yellow"/>
+</svg>

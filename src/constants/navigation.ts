@@ -1,6 +1,8 @@
 import {
+	AlertCircle,
 	Award,
 	BarChart3,
+	BookOpen,
 	CalendarDays,
 	GraduationCap,
 	LayoutDashboard,
@@ -65,7 +67,7 @@ export const dashboardNavigation = [
 		title: 'Reyting jadvali',
 		href: '/dashboard/admin#leaderboard',
 		icon: Trophy,
-		roles: ['ADMIN', 'MENTOR'],
+		roles: ['ADMIN'],
 	},
 	{
 		title: 'Mentor',
@@ -74,8 +76,32 @@ export const dashboardNavigation = [
 		roles: ['MENTOR', 'TUTOR', 'ADMIN'],
 	},
 	{
+		title: 'Guruhlar',
+		href: '/dashboard/mentor#mentor-groups',
+		icon: Users,
+		roles: ['MENTOR', 'TUTOR'],
+	},
+	{
+		title: 'Recovery jarayoni',
+		href: '/dashboard/mentor#recovery-process',
+		icon: BookOpen,
+		roles: ['MENTOR', 'TUTOR'],
+	},
+	{
+		title: 'Xavf ostidagi talabalar',
+		href: '/dashboard/mentor#risk-students',
+		icon: AlertCircle,
+		roles: ['MENTOR', 'TUTOR'],
+	},
+	{
+		title: 'Mentorlik Nizomi',
+		href: '/dashboard/mentor#mentor-criteria',
+		icon: BookOpen,
+		roles: ['MENTOR', 'TUTOR'],
+	},
+	{
 		title: 'Profil',
-		href: '/dashboard/student/profile',
+		href: '/dashboard/profile',
 		icon: User,
 		roles: ['STUDENT', 'MENTOR', 'TUTOR', 'ADMIN'],
 	},

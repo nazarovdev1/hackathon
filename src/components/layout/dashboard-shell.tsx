@@ -1,3 +1,4 @@
+import DashboardNavigation from '@/components/layout/dashboard-navigation'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,49 +11,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { dashboardNavigation } from '@/constants/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { LogOut, Menu, Search, Settings, User } from 'lucide-react'
 import { getServerSession } from 'next-auth'
 import Image from 'next/image'
 import Link from 'next/link'
-
-function NavigationList({
-	role,
-	pathname,
-}: {
-	role: string
-	pathname: string
-}) {
-	const filteredNav = dashboardNavigation.filter(item =>
-		(item.roles as readonly string[]).includes(role),
-	)
-
-	return (
-		<nav className='grid gap-1'>
-			{filteredNav.map(item => {
-				const isActive =
-					pathname === item.href ||
-					(item.href !== '/dashboard/student' && pathname.startsWith(item.href))
-				return (
-					<Link
-						key={item.href}
-						href={item.href}
-						className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition ${
-							isActive
-								? 'bg-primary/10 font-medium text-primary'
-								: 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-						}`}
-					>
-						<item.icon className='h-4 w-4' />
-						{item.title}
-					</Link>
-				)
-			})}
-		</nav>
-	)
-}
 
 function getInitials(name: string) {
 	return name
@@ -89,8 +53,6 @@ export async function DashboardShell({
 		}
 	}
 
-	const pathname = '/dashboard/student'
-
 	return (
 		<div className='metric-grid min-h-screen'>
 			<aside className='fixed inset-y-0 left-0 hidden w-72 border-r border-border/40 bg-sidebar/70 p-5 backdrop-blur-xl lg:block'>
@@ -114,7 +76,7 @@ export async function DashboardShell({
 					</span>
 				</Link>
 				<div className='mt-8'>
-					<NavigationList role={role} pathname={pathname} />
+					<DashboardNavigation role={role} />
 				</div>
 
 				<div className='absolute bottom-5 left-5 right-5'>
@@ -205,7 +167,7 @@ export async function DashboardShell({
 								<Menu className='h-4 w-4' />
 							</SheetTrigger>
 							<SheetContent side='left' className='w-72'>
-								<NavigationList role={role} pathname={pathname} />
+								<DashboardNavigation role={role} />
 							</SheetContent>
 						</Sheet>
 						<div>

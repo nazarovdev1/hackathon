@@ -275,6 +275,24 @@ export async function getLeaderboard() {
     .map((student, index) => ({ ...student, position: index + 1 }));
 }
 
+export async function getPublicStudentDashboard(studentId: string) {
+  const student = await prisma.studentProfile.findUnique({
+    where: { id: studentId },
+    include: studentInclude,
+  });
+  if (!student) return null;
+
+  const snapshot = buildStudentSnapshot(student);
+  
+  // Mask sensitive email field to preserve privacy for public mode
+  if (snapshot.email) {
+    snapshot.email = snapshot.email.replace(/(.).+@(.+)/, "$1***@$2");
+  }
+  
+  return snapshot;
+}
+
+
 export async function getMentorStudents() {
   const user = await getSessionUser();
   assertRole(user?.role, ["MENTOR", "TUTOR", "ADMIN"]);

@@ -9,11 +9,9 @@ if (!process.env.DATABASE_URL) {
 
 function withRequiredSslMode(connectionString) {
   const url = new URL(connectionString);
-
   if (!url.searchParams.has("sslmode")) {
     url.searchParams.set("sslmode", "require");
   }
-
   return url.toString();
 }
 
@@ -25,14 +23,7 @@ const semester = "2026 Spring";
 
 async function createUser({ id, fullName, email, password, role, phone }) {
   return prisma.user.create({
-    data: {
-      id,
-      fullName,
-      email,
-      phone,
-      role,
-      passwordHash: await bcrypt.hash(password, 10),
-    },
+    data: { id, fullName, email, phone, role, passwordHash: await bcrypt.hash(password, 10) },
   });
 }
 
@@ -48,20 +39,35 @@ function resolveGrantStatus(finalScore, academicPercent) {
 }
 
 function scoreRecord(studentId, kpi) {
+  // Formuladan to'g'ri hisoblash:
+  // Akademik ball = (acPct × 40) / 100
+  // Davomat ball  = (attPct × 20) / 100
+  const academicScore = Math.round((kpi.academicPercent * 40) / 100 * 100) / 100;
+  const attendanceScore = Math.round((kpi.attendancePercent * 20) / 100 * 100) / 100;
+
   const mainKpi =
-    kpi.academicScore +
-    kpi.attendanceScore +
+    academicScore +
+    attendanceScore +
     kpi.assignmentScore +
     kpi.activityScore +
     kpi.tutorScore +
     kpi.disciplineScore;
   const adminBonusScore = kpi.adminBonusScore ?? 0;
   const finalScore = mainKpi - kpi.penaltyScore + kpi.recoveryScore + kpi.employmentBonus + adminBonusScore;
-
   return {
     studentId,
     semester,
-    ...kpi,
+    academicPercent: kpi.academicPercent,
+    academicScore,
+    attendancePercent: kpi.attendancePercent,
+    attendanceScore,
+    assignmentScore: kpi.assignmentScore,
+    activityScore: kpi.activityScore,
+    tutorScore: kpi.tutorScore,
+    disciplineScore: kpi.disciplineScore,
+    penaltyScore: kpi.penaltyScore,
+    recoveryScore: kpi.recoveryScore,
+    employmentBonus: kpi.employmentBonus,
     adminBonusScore,
     mainKpi,
     finalScore,
@@ -70,361 +76,176 @@ function scoreRecord(studentId, kpi) {
   };
 }
 
-async function clearSeedData() {
-  const seedStudentProfileIds = ["sp_001", "sp_002", "sp_003"];
-  const seedUserIds = ["admin_1", "mentor_1", "tutor_1", "student_1", "student_2", "student_3"];
+// 20 ta talaba ma'lumotlari — acPct: akademik foiz, attPct: davomat foiz
+// academicScore = (acPct × 40) / 100
+// attendanceScore = (attPct × 20) / 100
+const students = [
+  { id: "student_01", fullName: "Madina Karimova",   email: "madina.k@edumetric.uz",  faculty: "Computer Science", group: "CS-21A", level: "3-kurs", grantType: "FULL", acPct: 91, attPct: 87, asgn: 15, act: 9,  tut: 4, disc: 8,  pen: 3,  rec: 4, emp: 2 },
+  { id: "student_02", fullName: "Azizbek Rahmonov",  email: "azizbek.r@edumetric.uz", faculty: "Economics",        group: "EC-20B", level: "4-kurs", grantType: "FULL", acPct: 78, attPct: 55, asgn: 10, act: 7,  tut: 3, disc: 7,  pen: 8,  rec: 2, emp: 0 },
+  { id: "student_03", fullName: "Sevara Olimova",    email: "sevara.o@edumetric.uz",  faculty: "Data Science",     group: "DS-22C", level: "2-kurs", grantType: "FULL", acPct: 96, attPct: 99, asgn: 14, act: 10, tut: 5, disc: 9,  pen: 0,  rec: 1, emp: 3 },
+  { id: "student_04", fullName: "Jasur Toshmatov",   email: "jasur.t@edumetric.uz",   faculty: "Engineering",      group: "EN-21A", level: "3-kurs", grantType: "FULL", acPct: 85, attPct: 82, asgn: 13, act: 8,  tut: 4, disc: 7,  pen: 2,  rec: 3, emp: 1 },
+  { id: "student_05", fullName: "Nodira Alimova",    email: "nodira.a@edumetric.uz",  faculty: "Business",         group: "BU-20B", level: "4-kurs", grantType: "FULL", acPct: 82, attPct: 78, asgn: 12, act: 6,  tut: 4, disc: 8,  pen: 5,  rec: 1, emp: 0 },
+  { id: "student_06", fullName: "Bobur Mirzayev",    email: "bobur.m@edumetric.uz",   faculty: "Computer Science", group: "CS-22C", level: "2-kurs", grantType: "FULL", acPct: 88, attPct: 90, asgn: 14, act: 9,  tut: 5, disc: 8,  pen: 1,  rec: 2, emp: 2 },
+  { id: "student_07", fullName: "Gulnora Usmanova",  email: "gulnora.u@edumetric.uz", faculty: "Information Tech", group: "IT-22A", level: "2-kurs", grantType: "FULL", acPct: 76, attPct: 62, asgn: 9,  act: 5,  tut: 3, disc: 6,  pen: 10, rec: 4, emp: 1 },
+  { id: "student_08", fullName: "Sherzod Akbarov",   email: "sherzod.a@edumetric.uz", faculty: "Mathematics",      group: "MA-21B", level: "3-kurs", grantType: "FULL", acPct: 93, attPct: 98, asgn: 15, act: 10, tut: 5, disc: 10, pen: 0,  rec: 0, emp: 0 },
+  { id: "student_09", fullName: "Zarina Ergasheva",  email: "zarina.e@edumetric.uz",  faculty: "Computer Science", group: "CS-23A", level: "1-kurs", grantType: "FULL", acPct: 70, attPct: 52, asgn: 8,  act: 4,  tut: 3, disc: 5,  pen: 12, rec: 3, emp: 0 },
+  { id: "student_10", fullName: "Farrux Xasanov",    email: "farrux.x@edumetric.uz",  faculty: "Data Science",     group: "DS-20B", level: "4-kurs", grantType: "FULL", acPct: 90, attPct: 88, asgn: 14, act: 9,  tut: 5, disc: 9,  pen: 2,  rec: 2, emp: 3 },
+  { id: "student_11", fullName: "Dildora Yusupova",  email: "dildora.y@edumetric.uz", faculty: "Economics",        group: "EC-21A", level: "3-kurs", grantType: "FULL", acPct: 87, attPct: 84, asgn: 13, act: 8,  tut: 4, disc: 8,  pen: 3,  rec: 3, emp: 1 },
+  { id: "student_12", fullName: "Islom Qodirov",     email: "islom.q@edumetric.uz",   faculty: "Engineering",      group: "EN-23C", level: "1-kurs", grantType: "FULL", acPct: 74, attPct: 60, asgn: 9,  act: 6,  tut: 3, disc: 6,  pen: 8,  rec: 2, emp: 0 },
+  { id: "student_13", fullName: "Malika Rahimova",   email: "malika.r@edumetric.uz",  faculty: "Business",         group: "BU-22A", level: "2-kurs", grantType: "FULL", acPct: 83, attPct: 80, asgn: 13, act: 7,  tut: 4, disc: 7,  pen: 4,  rec: 2, emp: 1 },
+  { id: "student_14", fullName: "Temur Soliyev",     email: "temur.s@edumetric.uz",   faculty: "Information Tech", group: "IT-21B", level: "3-kurs", grantType: "FULL", acPct: 79, attPct: 72, asgn: 11, act: 7,  tut: 4, disc: 7,  pen: 6,  rec: 3, emp: 2 },
+  { id: "student_15", fullName: "Feruza Norboyeva",  email: "feruza.n@edumetric.uz",  faculty: "Mathematics",      group: "MA-22C", level: "2-kurs", grantType: "FULL", acPct: 95, attPct: 97, asgn: 15, act: 10, tut: 5, disc: 10, pen: 0,  rec: 1, emp: 0 },
+  { id: "student_16", fullName: "Olim Ruzmetov",     email: "olim.r@edumetric.uz",    faculty: "Computer Science", group: "CS-20A", level: "4-kurs", grantType: "FULL", acPct: 92, attPct: 91, asgn: 15, act: 9,  tut: 5, disc: 9,  pen: 1,  rec: 2, emp: 3 },
+  { id: "student_17", fullName: "Saodat Mirzayeva",  email: "saodat.m@edumetric.uz",  faculty: "Data Science",     group: "DS-23A", level: "1-kurs", grantType: "FULL", acPct: 68, attPct: 48, asgn: 8,  act: 3,  tut: 2, disc: 5,  pen: 15, rec: 5, emp: 0 },
+  { id: "student_18", fullName: "Akbar Shukurov",    email: "akbar.s@edumetric.uz",   faculty: "Engineering",      group: "EN-22B", level: "2-kurs", grantType: "FULL", acPct: 86, attPct: 83, asgn: 13, act: 8,  tut: 4, disc: 8,  pen: 2,  rec: 1, emp: 0 },
+  { id: "student_19", fullName: "Lola Xudoyberdiyeva",email: "lola.x@edumetric.uz",   faculty: "Economics",        group: "EC-22B", level: "2-kurs", grantType: "FULL", acPct: 81, attPct: 79, asgn: 12, act: 7,  tut: 4, disc: 7,  pen: 4,  rec: 2, emp: 1 },
+  { id: "student_20", fullName: "Sardor Ganiyev",    email: "sardor.g@edumetric.uz",  faculty: "Business",         group: "BU-21A", level: "3-kurs", grantType: "FULL", acPct: 89, attPct: 92, asgn: 14, act: 9,  tut: 5, disc: 8,  pen: 1,  rec: 1, emp: 2 },
+];
 
-  await prisma.grantDecision.deleteMany({ where: { OR: [{ studentId: { in: seedStudentProfileIds } }, { approvedById: { in: seedUserIds } }] } });
-  await prisma.feedback.deleteMany({ where: { OR: [{ studentId: { in: seedStudentProfileIds } }, { authorId: { in: seedUserIds } }] } });
-  await prisma.employment.deleteMany({ where: { studentId: { in: seedStudentProfileIds } } });
-  await prisma.recoveryTask.deleteMany({ where: { OR: [{ studentId: { in: seedStudentProfileIds } }, { assignedById: { in: seedUserIds } }] } });
-  await prisma.penalty.deleteMany({ where: { OR: [{ studentId: { in: seedStudentProfileIds } }, { createdById: { in: seedUserIds } }] } });
-  await prisma.achievement.deleteMany({ where: { OR: [{ studentId: { in: seedStudentProfileIds } }, { approvedById: { in: seedUserIds } }] } });
-  await prisma.assignmentRecord.deleteMany({ where: { studentId: { in: seedStudentProfileIds } } });
-  await prisma.attendanceRecord.deleteMany({ where: { studentId: { in: seedStudentProfileIds } } });
-  await prisma.scoreRecord.deleteMany({ where: { studentId: { in: seedStudentProfileIds } } });
-  await prisma.tutorProfile.deleteMany({ where: { userId: { in: seedUserIds } } });
-  await prisma.mentorProfile.deleteMany({ where: { userId: { in: seedUserIds } } });
-  await prisma.studentProfile.deleteMany({ where: { OR: [{ id: { in: seedStudentProfileIds } }, { userId: { in: seedUserIds } }] } });
-  await prisma.user.deleteMany({ where: { id: { in: seedUserIds } } });
-}
+const MONTHS = ["2026-01", "2026-02", "2026-03", "2026-04", "2026-05"];
+const SUBJECTS = ["Backend", "Frontend", "Database", "DevOps", "ML", "Statistics", "Analytics", "Economics"];
 
 async function main() {
-  await clearSeedData();
+  await prisma.grantDecision.deleteMany({});
+  await prisma.feedback.deleteMany({});
+  await prisma.employment.deleteMany({});
+  await prisma.recoveryTask.deleteMany({});
+  await prisma.penalty.deleteMany({});
+  await prisma.achievement.deleteMany({});
+  await prisma.assignmentRecord.deleteMany({});
+  await prisma.attendanceRecord.deleteMany({});
+  await prisma.scoreRecord.deleteMany({});
+  await prisma.tutorProfile.deleteMany({});
+  await prisma.mentorProfile.deleteMany({});
+  await prisma.studentProfile.deleteMany({});
+  await prisma.user.deleteMany({});
 
-  const admin = await createUser({
-    id: "admin_1",
-    fullName: "PDP Admin",
-    email: "admin@pdp.uz",
-    password: "admin123",
-    role: "ADMIN",
-    phone: "+998900000001",
-  });
-  const mentor = await createUser({
-    id: "mentor_1",
-    fullName: "Rustam Qodirov",
-    email: "mentor@pdp.uz",
-    password: "mentor123",
-    role: "MENTOR",
-    phone: "+998900000002",
-  });
-  const tutor = await createUser({
-    id: "tutor_1",
-    fullName: "Dilfuza Alimova",
-    email: "tutor@pdp.uz",
-    password: "tutor123",
-    role: "TUTOR",
-    phone: "+998900000003",
-  });
+  console.log("Eski seed tozalandi.");
 
-  await prisma.mentorProfile.create({
-    data: { id: "mp_1", userId: mentor.id, department: "Engineering", specialty: "Backend Spring Boot" },
-  });
-  await prisma.tutorProfile.create({
-    data: { id: "tp_1", userId: tutor.id, assignedGroup: "CS-21A" },
-  });
+  // Admin, Mentor, Tutor
+  const admin = await createUser({ id: "admin_1", fullName: "PDP Admin", email: "admin@pdp.uz", password: "admin123", role: "ADMIN", phone: "+998900000001" });
+  const mentor = await createUser({ id: "mentor_1", fullName: "Rustam Qodirov", email: "mentor@pdp.uz", password: "mentor123", role: "MENTOR", phone: "+998900000002" });
+  const tutor = await createUser({ id: "tutor_1", fullName: "Dilfuza Alimova", email: "tutor@pdp.uz", password: "tutor123", role: "TUTOR", phone: "+998900000003" });
 
-  const studentUsers = await Promise.all([
-    createUser({
-      id: "student_1",
-      fullName: "Madina Karimova",
-      email: "student@pdp.uz",
+  await prisma.mentorProfile.create({ data: { id: "mp_1", userId: mentor.id, department: "Engineering", specialty: "Backend Spring Boot" } });
+  await prisma.tutorProfile.create({ data: { id: "tp_1", userId: tutor.id, assignedGroup: "CS-21A" } });
+
+  // 20 ta talaba yaratish
+  console.log("20 ta talaba yaratilmoqda...");
+  for (let i = 0; i < students.length; i++) {
+    const s = students[i];
+    const profileId = `sp_${String(i + 1).padStart(3, "0")}`;
+
+    const user = await createUser({
+      id: s.id,
+      fullName: s.fullName,
+      email: s.email,
       password: "student123",
       role: "STUDENT",
-      phone: "+998901111111",
-    }),
-    createUser({
-      id: "student_2",
-      fullName: "Azizbek Rahmonov",
-      email: "azizbek.r@edumetric.uz",
-      password: "student123",
-      role: "STUDENT",
-      phone: "+998902222222",
-    }),
-    createUser({
-      id: "student_3",
-      fullName: "Sevara Olimova",
-      email: "sevara.o@edumetric.uz",
-      password: "student123",
-      role: "STUDENT",
-      phone: "+998903333333",
-    }),
-  ]);
+      phone: `+99890${String(1000000 + i).slice(0, 7)}`,
+    });
 
-  const profiles = await Promise.all([
-    prisma.studentProfile.create({
+    await prisma.studentProfile.create({
       data: {
-        id: "sp_001",
-        userId: studentUsers[0].id,
+        id: profileId,
+        userId: user.id,
         mentorId: mentor.id,
         tutorId: tutor.id,
-        studentId: "STU-001",
-        faculty: "Computer Science",
-        groupName: "CS-21A",
-        level: "3-kurs",
-        grantType: "FULL",
-        currentGpaPercent: 91,
+        studentId: `STU-${String(i + 1).padStart(3, "0")}`,
+        faculty: s.faculty,
+        groupName: s.group,
+        level: s.level,
+        grantType: s.grantType,
+        currentGpaPercent: s.acPct,
       },
-    }),
-    prisma.studentProfile.create({
+    });
+
+    // ScoreRecord — akademik va davomat ballari formuladan avtomatik hisoblanadi
+    await prisma.scoreRecord.create({
+      data: scoreRecord(profileId, {
+        academicPercent: s.acPct,
+        attendancePercent: s.attPct,
+        assignmentScore: s.asgn,
+        activityScore: s.act,
+        tutorScore: s.tut,
+        disciplineScore: s.disc,
+        penaltyScore: s.pen,
+        recoveryScore: s.rec,
+        employmentBonus: s.emp,
+      }),
+    });
+
+    // AttendanceRecords — har bir talabaga 5 ta oylik
+    const attRecords = MONTHS.map((m, idx) => {
+      const statuses = ["PRESENT", "PRESENT", "PRESENT", "LATE", "PRESENT"];
+      return {
+        studentId: profileId,
+        date: new Date(`${m}-10`),
+        status: idx === 0 ? statuses[i % 5] : statuses[(i + idx) % 5],
+        subject: SUBJECTS[(i + idx) % SUBJECTS.length],
+      };
+    });
+    await prisma.attendanceRecord.createMany({ data: attRecords });
+
+    // AssignmentRecord — har bir talabaga 1 ta
+    await prisma.assignmentRecord.create({
       data: {
-        id: "sp_002",
-        userId: studentUsers[1].id,
-        mentorId: mentor.id,
-        tutorId: tutor.id,
-        studentId: "STU-002",
-        faculty: "Economics",
-        groupName: "EC-20B",
-        level: "4-kurs",
-        grantType: "FULL",
-        currentGpaPercent: 78,
-      },
-    }),
-    prisma.studentProfile.create({
-      data: {
-        id: "sp_003",
-        userId: studentUsers[2].id,
-        mentorId: mentor.id,
-        tutorId: tutor.id,
-        studentId: "STU-003",
-        faculty: "Data Science",
-        groupName: "DS-22C",
-        level: "2-kurs",
-        grantType: "FULL",
-        currentGpaPercent: 96,
-      },
-    }),
-  ]);
-
-  await prisma.scoreRecord.createMany({
-    data: [
-      scoreRecord(profiles[0].id, {
-        academicPercent: 91,
-        academicScore: 34,
-        attendanceScore: 17,
-        assignmentScore: 15,
-        activityScore: 9,
-        tutorScore: 4,
-        disciplineScore: 8,
-        penaltyScore: 3,
-        recoveryScore: 4,
-        employmentBonus: 2,
-      }),
-      scoreRecord(profiles[1].id, {
-        academicPercent: 78,
-        academicScore: 28,
-        attendanceScore: 11,
-        assignmentScore: 10,
-        activityScore: 7,
-        tutorScore: 3,
-        disciplineScore: 7,
-        penaltyScore: 8,
-        recoveryScore: 2,
-        employmentBonus: 0,
-      }),
-      scoreRecord(profiles[2].id, {
-        academicPercent: 96,
-        academicScore: 36,
-        attendanceScore: 18,
-        assignmentScore: 14,
-        activityScore: 10,
-        tutorScore: 5,
-        disciplineScore: 9,
-        penaltyScore: 0,
-        recoveryScore: 1,
-        employmentBonus: 3,
-      }),
-    ],
-  });
-
-  await prisma.attendanceRecord.createMany({
-    data: [
-      { studentId: profiles[0].id, date: new Date("2026-01-10"), status: "PRESENT", subject: "Backend" },
-      { studentId: profiles[0].id, date: new Date("2026-02-10"), status: "PRESENT", subject: "Backend" },
-      { studentId: profiles[0].id, date: new Date("2026-03-10"), status: "LATE", subject: "Database" },
-      { studentId: profiles[0].id, date: new Date("2026-04-10"), status: "PRESENT", subject: "Database" },
-      { studentId: profiles[0].id, date: new Date("2026-05-10"), status: "PRESENT", subject: "DevOps" },
-      { studentId: profiles[1].id, date: new Date("2026-01-10"), status: "PRESENT", subject: "Economics" },
-      { studentId: profiles[1].id, date: new Date("2026-02-10"), status: "LATE", subject: "Economics" },
-      { studentId: profiles[1].id, date: new Date("2026-03-10"), status: "ABSENT", subject: "Finance" },
-      { studentId: profiles[1].id, date: new Date("2026-04-10"), status: "ABSENT", subject: "Finance" },
-      { studentId: profiles[1].id, date: new Date("2026-05-10"), status: "LATE", subject: "Analytics" },
-      { studentId: profiles[2].id, date: new Date("2026-01-10"), status: "PRESENT", subject: "Data Mining" },
-      { studentId: profiles[2].id, date: new Date("2026-02-10"), status: "PRESENT", subject: "ML" },
-      { studentId: profiles[2].id, date: new Date("2026-03-10"), status: "PRESENT", subject: "ML" },
-      { studentId: profiles[2].id, date: new Date("2026-04-10"), status: "PRESENT", subject: "Statistics" },
-      { studentId: profiles[2].id, date: new Date("2026-05-10"), status: "PRESENT", subject: "Statistics" },
-    ],
-  });
-
-  await prisma.assignmentRecord.createMany({
-    data: [
-      {
-        studentId: profiles[0].id,
-        subject: "Backend Spring Boot",
-        title: "Database loyihasi",
-        score: 15,
-        status: "SUBMITTED",
-        submittedOnTime: true,
+        studentId: profileId,
+        subject: SUBJECTS[i % SUBJECTS.length],
+        title: `${SUBJECTS[i % SUBJECTS.length]} loyihasi`,
+        score: s.asgn,
+        status: s.asgn >= 12 ? "SUBMITTED" : s.asgn >= 9 ? "LATE" : "MISSED",
+        submittedOnTime: s.asgn >= 12,
         isOriginal: true,
-        qualityNote: "Clean architecture va transaction management yaxshi.",
-        deadline: new Date("2026-05-14"),
-        submittedAt: new Date("2026-05-13"),
+        qualityNote: s.asgn >= 13 ? "Yaxshi natija." : "Yaxshilash kerak.",
+        deadline: new Date("2026-05-20"),
+        submittedAt: new Date("2026-05-18"),
       },
-      {
-        studentId: profiles[1].id,
-        subject: "Spring Core",
-        title: "MVC loyiha",
-        score: 10,
-        status: "LATE",
-        submittedOnTime: false,
-        isOriginal: true,
-        qualityNote: "Kod takrorlanishi ko'p.",
-        deadline: new Date("2026-05-10"),
-        submittedAt: new Date("2026-05-15"),
-      },
-      {
-        studentId: profiles[2].id,
-        subject: "Next.js",
-        title: "Analytics dashboard",
-        score: 14,
-        status: "SUBMITTED",
-        submittedOnTime: true,
-        isOriginal: true,
-        qualityNote: "Responsive dizayn va state management yaxshi.",
-        deadline: new Date("2026-05-18"),
-        submittedAt: new Date("2026-05-17"),
-      },
-    ],
-  });
+    });
+  }
 
+  // Achievement, Penalty, Recovery — ba'zi talabalarga
   await prisma.achievement.createMany({
     data: [
-      {
-        studentId: profiles[0].id,
-        approvedById: admin.id,
-        type: "INNOVATION",
-        title: "AI Hackathon finalist",
-        description: "Universitet hackathon final bosqichi.",
-        score: 5,
-        status: "APPROVED",
-        proofUrl: "/uploads/ai-hackathon.pdf",
-      },
-      {
-        studentId: profiles[0].id,
-        approvedById: admin.id,
-        type: "RESEARCH",
-        title: "Research assistant",
-        description: "Ilmiy loyiha yordamchisi.",
-        score: 4,
-        status: "APPROVED",
-        proofUrl: "/uploads/research-assistant.pdf",
-      },
-      {
-        studentId: profiles[1].id,
-        approvedById: tutor.id,
-        type: "SOCIAL",
-        title: "Case study speaker",
-        description: "Talabalar seminarida chiqish.",
-        score: 2,
-        status: "APPROVED",
-      },
-      {
-        studentId: profiles[2].id,
-        approvedById: admin.id,
-        type: "ACADEMIC",
-        title: "Dean list",
-        description: "Akademik yuqori natija.",
-        score: 5,
-        status: "APPROVED",
-      },
-      {
-        studentId: profiles[2].id,
-        approvedById: admin.id,
-        type: "LEADERSHIP",
-        title: "Open data project lead",
-        description: "Ochiq data loyihasi yetakchisi.",
-        score: 5,
-        status: "APPROVED",
-      },
+      { studentId: "sp_001", approvedById: admin.id, type: "INNOVATION", title: "AI Hackathon finalist", description: "Universitet hackathon", score: 5, status: "APPROVED" },
+      { studentId: "sp_003", approvedById: admin.id, type: "ACADEMIC", title: "Dean list", description: "Yuqori akademik natija", score: 5, status: "APPROVED" },
+      { studentId: "sp_008", approvedById: admin.id, type: "RESEARCH", title: "Math Olympiad winner", description: "Matematika olimpiadasi", score: 5, status: "APPROVED" },
+      { studentId: "sp_015", approvedById: admin.id, type: "ACADEMIC", title: "Top GPA", description: "Eng yuqori GPA", score: 5, status: "APPROVED" },
+      { studentId: "sp_016", approvedById: admin.id, type: "LEADERSHIP", title: "Student council chair", description: "Talabalar kengashi raisi", score: 5, status: "APPROVED" },
     ],
   });
 
   await prisma.penalty.createMany({
     data: [
-      { studentId: profiles[0].id, createdById: mentor.id, type: "ASSIGNMENT", reason: "Late lab submission", score: 3, createdAt: new Date("2026-04-11") },
-      { studentId: profiles[1].id, createdById: mentor.id, type: "ATTENDANCE", reason: "Attendance violation", score: 5, createdAt: new Date("2026-03-20") },
-      { studentId: profiles[1].id, createdById: mentor.id, type: "ASSIGNMENT", reason: "Missed assignment", score: 3, createdAt: new Date("2026-04-28") },
+      { studentId: "sp_001", createdById: mentor.id, type: "ASSIGNMENT", reason: "Kech topshirilgan lab", score: 3 },
+      { studentId: "sp_002", createdById: mentor.id, type: "ATTENDANCE", reason: "Davomat buzilishi", score: 5 },
+      { studentId: "sp_002", createdById: mentor.id, type: "ASSIGNMENT", reason: "Topshiriq kechikishi", score: 3 },
+      { studentId: "sp_007", createdById: mentor.id, type: "DISCIPLINE", reason: "Intizom buzilishi", score: 10 },
+      { studentId: "sp_009", createdById: mentor.id, type: "ATTENDANCE", reason: "Dars qoldirish", score: 12 },
+      { studentId: "sp_017", createdById: mentor.id, type: "ACADEMIC", reason: "Plagiat holati", score: 15 },
     ],
   });
 
   await prisma.recoveryTask.createMany({
     data: [
-      { studentId: profiles[0].id, assignedById: mentor.id, title: "Lab qayta topshirish", description: "Kechikkan labni himoya qilish.", recoveryScore: 4, status: "IN_PROGRESS", deadline: new Date("2026-05-30") },
-      { studentId: profiles[1].id, assignedById: mentor.id, title: "Davomat tiklash rejasi", description: "Qo'shimcha mashg'ulot va mentor sessiyalari.", recoveryScore: 2, status: "ASSIGNED", deadline: new Date("2026-06-05") },
-      { studentId: profiles[2].id, assignedById: tutor.id, title: "Peer review", description: "Guruhdoshlarga loyiha review qilish.", recoveryScore: 1, status: "COMPLETED", deadline: new Date("2026-05-22"), completedAt: new Date("2026-05-20") },
+      { studentId: "sp_001", assignedById: mentor.id, title: "Lab qayta topshirish", recoveryScore: 4, status: "IN_PROGRESS", deadline: new Date("2026-05-30") },
+      { studentId: "sp_002", assignedById: mentor.id, title: "Davomat tiklash", recoveryScore: 2, status: "ASSIGNED", deadline: new Date("2026-06-05") },
+      { studentId: "sp_007", assignedById: mentor.id, title: "Intizom reabilitatsiya", recoveryScore: 4, status: "IN_PROGRESS", deadline: new Date("2026-06-10") },
+      { studentId: "sp_017", assignedById: tutor.id, title: "Akademik qayta tiklash", recoveryScore: 5, status: "ASSIGNED", deadline: new Date("2026-06-15") },
     ],
   });
 
   await prisma.employment.createMany({
     data: [
-      { studentId: profiles[0].id, type: "RESEARCH_ASSISTANT", companyName: "PDP Research Lab", position: "Assistant", bonusScore: 2, proofUrl: "/uploads/research-work.pdf", status: "APPROVED" },
-      { studentId: profiles[2].id, type: "INTERNSHIP", companyName: "DataCraft", position: "Data intern", bonusScore: 3, proofUrl: "/uploads/datacraft.pdf", status: "APPROVED" },
+      { studentId: "sp_001", type: "RESEARCH_ASSISTANT", companyName: "PDP Research Lab", position: "Assistant", bonusScore: 2, status: "APPROVED" },
+      { studentId: "sp_003", type: "INTERNSHIP", companyName: "DataCraft", position: "Data intern", bonusScore: 3, status: "APPROVED" },
+      { studentId: "sp_010", type: "FULL_TIME", companyName: "TechSoft", position: "Engineer", bonusScore: 3, status: "APPROVED" },
+      { studentId: "sp_016", type: "INTERNSHIP", companyName: "Google", position: "Software intern", bonusScore: 3, status: "APPROVED" },
+      { studentId: "sp_020", type: "PART_TIME", companyName: "StartUpX", position: "Developer", bonusScore: 2, status: "APPROVED" },
     ],
   });
 
-  await prisma.feedback.createMany({
-    data: [
-      {
-        studentId: profiles[0].id,
-        authorId: mentor.id,
-        type: "ASSIGNMENT",
-        subject: "Backend Spring Boot & Database Loyihasi",
-        grade: 5,
-        score: 15,
-        message: "Loyiha arxitekturasi juda yaxshi tuzilgan. JPA relation-lardan to'g'ri foydalanilgan.",
-        createdAt: new Date("2026-05-18"),
-      },
-      {
-        studentId: profiles[0].id,
-        authorId: tutor.id,
-        type: "TUTOR",
-        subject: "Faollik va jamoaviy ish",
-        grade: 4.8,
-        score: 4,
-        message: "Darslarda faol va guruh sardori sifatida boshqalarni rag'batlantiradi.",
-        createdAt: new Date("2026-05-12"),
-      },
-      {
-        studentId: profiles[1].id,
-        authorId: mentor.id,
-        type: "ASSIGNMENT",
-        subject: "Spring Core & MVC",
-        grade: 3.5,
-        score: 10,
-        message: "Loyiha o'z vaqtida topshirilmadi. Dependency Injection mavzularini qayta ko'rish kerak.",
-        createdAt: new Date("2026-05-15"),
-      },
-      {
-        studentId: profiles[2].id,
-        authorId: mentor.id,
-        type: "ASSIGNMENT",
-        subject: "Next.js & State Management Project",
-        grade: 5,
-        score: 14,
-        message: "Komponentlar yaxshi bo'lingan va responsive dizayn to'liq ta'minlangan.",
-        createdAt: new Date("2026-05-19"),
-      },
-    ],
-  });
-
-  await prisma.grantDecision.createMany({
-    data: [
-      { studentId: profiles[0].id, approvedById: admin.id, semester, status: "APPROVED", finalScore: 90, reason: "Grant talablari bajarilgan." },
-      { studentId: profiles[1].id, approvedById: admin.id, semester, status: "REJECTED", finalScore: 60, reason: "Academic percent 80% dan past." },
-      { studentId: profiles[2].id, approvedById: admin.id, semester, status: "APPROVED", finalScore: 96, reason: "Yuqori akademik va faollik natijalari." },
-    ],
-  });
+  console.log("20 ta talaba muvaffaqiyatli qo'shildi!");
 }
 
 main()

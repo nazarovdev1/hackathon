@@ -3,13 +3,19 @@ import { MotionPanel } from '@/components/providers/motion-panel'
 import { ChevronLeft } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { getCachedServerSession } from '@/lib/session'
+import { redirect } from 'next/navigation'
 
 export const metadata = {
 	title: 'Tizimga kirish - PDP METRIC',
 	description: 'PDP METRIC hisobingizga kiring.',
 }
 
-export default function LoginPage() {
+export default async function LoginPage() {
+	const session = await getCachedServerSession()
+	if (session) {
+		redirect('/dashboard')
+	}
 	return (
 		<main className='metric-grid min-h-screen flex flex-col px-4 py-4 sm:px-6'>
 			<nav className='mx-auto flex w-full max-w-7xl items-center justify-between relative z-10 mb-8'>

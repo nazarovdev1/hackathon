@@ -25,7 +25,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
   } else if (pathname.startsWith("/dashboard/student")) {
-    if (role !== "STUDENT" && role !== "ADMIN") {
+    if (role !== "STUDENT") {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
   } else if (pathname.startsWith("/dashboard/settings") || pathname.startsWith("/dashboard/profile")) {

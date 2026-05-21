@@ -1,6 +1,8 @@
+export const dynamic = 'force-dynamic'
+
 import { MotionPanel } from '@/components/providers/motion-panel'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
-import { buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button-variants'
 import { Card, CardContent } from '@/components/ui/card'
 import {
 	ArrowRight,
@@ -12,8 +14,10 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { getCachedServerSession } from '@/lib/session'
 
-export default function Home() {
+export default async function Home() {
+	const session = await getCachedServerSession()
 	return (
 		<main className='metric-grid h-screen w-full px-4 py-4 sm:px-6 relative overflow-hidden flex flex-col'>
 			{/* Dynamic Background Elements for UX */}
@@ -53,21 +57,32 @@ export default function Home() {
 							</Link>
 						</div>
 						<ThemeToggle />
-						<Link
-							className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-							href='/login'
-						>
-							Kirish
-						</Link>
-						<Link
-							className={buttonVariants({
-								size: 'sm',
-								className: 'shadow-lg shadow-primary/20',
-							})}
-							href='/login'
-						>
-							Boshlash <ArrowRight className='ml-2 h-4 w-4' />
-						</Link>
+						{session ? (
+							<Link
+								className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+								href='/dashboard'
+							>
+								Boshqaruv paneli
+							</Link>
+						) : (
+							<>
+								<Link
+									className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+									href='/login'
+								>
+									Kirish
+								</Link>
+								<Link
+									className={buttonVariants({
+										size: 'sm',
+										className: 'shadow-lg shadow-primary/20',
+									})}
+									href='/login'
+								>
+									Boshlash <ArrowRight className='ml-2 h-4 w-4' />
+								</Link>
+							</>
+						)}
 					</div>
 				</nav>
 
@@ -92,16 +107,29 @@ export default function Home() {
 							</p>
 
 							<div className='flex flex-col sm:flex-row items-center gap-4'>
-								<Link
-									className={buttonVariants({
-										size: 'lg',
-										className:
-											'h-11 px-8 text-base shadow-xl shadow-primary/20',
-									})}
-									href='/login'
-								>
-									Tizimga kirish
-								</Link>
+								{session ? (
+									<Link
+										className={buttonVariants({
+											size: 'lg',
+											className:
+												'h-11 px-8 text-base shadow-xl shadow-primary/20',
+										})}
+										href='/dashboard'
+									>
+										Boshqaruv paneli
+									</Link>
+								) : (
+									<Link
+										className={buttonVariants({
+											size: 'lg',
+											className:
+												'h-11 px-8 text-base shadow-xl shadow-primary/20',
+										})}
+										href='/login'
+									>
+										Tizimga kirish
+									</Link>
+								)}
 								<Link
 									className={buttonVariants({
 										variant: 'outline',

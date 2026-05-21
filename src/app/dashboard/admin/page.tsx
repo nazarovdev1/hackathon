@@ -30,6 +30,10 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getAdminGrantOverview } from '@/services/dashboard-data'
+import { getCachedServerSession } from '@/lib/session'
+import { redirect } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
+import { SystemManagement } from '@/components/dashboard/system-management'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,6 +42,11 @@ export default async function AdminDashboardPage({
 }: {
 	searchParams: Promise<{ tab?: string }>
 }) {
+	const session = await getCachedServerSession()
+	if (!session || session.user.role !== 'ADMIN') {
+		redirect('/')
+	}
+
 	const { tab } = await searchParams
 	const activeTab =
 		tab === 'grants'
@@ -46,10 +55,81 @@ export default async function AdminDashboardPage({
 				? 'leaderboard'
 				: tab === 'analytics'
 					? 'analytics'
-					: 'students'
+					: tab === 'system'
+						? 'system'
+						: 'students'
 
 	const { rows, eligible, highRisk, distribution, leaderboard, total } =
 		await getAdminGrantOverview()
+
+	// Fetch distinct groups from student profiles
+	const studentsForGroups = await prisma.studentProfile.findMany({
+		select: {
+			groupName: true,
+			mentor: { select: { id: true, fullName: true } },
+			tutor: { select: { id: true, fullName: true } },
+		}
+	})
+
+	// Fetch all tutor profiles with assigned groups
+	const tutorsWithGroups = await prisma.tutorProfile.findMany({
+		where: {
+			assignedGroup: { not: '' }
+		},
+		select: {
+			assignedGroup: true,
+			user: { select: { id: true, fullName: true } }
+		}
+	})
+
+	const groupsMap = new Map<string, { name: string; studentCount: number; mentorName: string; tutorName: string }>()
+
+	// Initialize groups from tutor profiles
+	for (const tutor of tutorsWithGroups) {
+		const groupName = tutor.assignedGroup.trim()
+		if (groupName) {
+			groupsMap.set(groupName, {
+				name: groupName,
+				studentCount: 0,
+				mentorName: 'Biriktirilmagan',
+				tutorName: tutor.user.fullName
+			})
+		}
+	}
+
+	// Merge students (this will update student counts and also fill in mentor names if any student has a mentor)
+	for (const student of studentsForGroups) {
+		const groupName = student.groupName.trim()
+		if (!groupName) continue
+
+		const current = groupsMap.get(groupName) || {
+			name: groupName,
+			studentCount: 0,
+			mentorName: 'Biriktirilmagan',
+			tutorName: student.tutor?.fullName || 'Biriktirilmagan'
+		}
+
+		current.studentCount += 1
+		if (student.mentor?.fullName) {
+			current.mentorName = student.mentor.fullName
+		}
+		if (student.tutor?.fullName) {
+			current.tutorName = student.tutor.fullName
+		}
+		groupsMap.set(groupName, current)
+	}
+
+	const groups = Array.from(groupsMap.values())
+
+	// Fetch active mentors and tutors
+	const mentors = await prisma.user.findMany({
+		where: { role: 'MENTOR', isActive: true },
+		select: { id: true, fullName: true }
+	})
+	const tutors = await prisma.user.findMany({
+		where: { role: 'TUTOR', isActive: true },
+		select: { id: true, fullName: true }
+	})
 
 	return (
 		<DashboardShell
@@ -98,6 +178,7 @@ export default async function AdminDashboardPage({
 							<TabsTrigger value='students'>Talabalar</TabsTrigger>
 							<TabsTrigger value='analytics'>Tahlillar</TabsTrigger>
 							<TabsTrigger value='leaderboard'>Reyting</TabsTrigger>
+							<TabsTrigger value='system'>Tizim boshqaruvi</TabsTrigger>
 						</TabsList>
 						<div className='flex gap-2'>
 							<Select defaultValue='all'>
@@ -225,6 +306,10 @@ export default async function AdminDashboardPage({
 								</div>
 							</CardContent>
 						</Card>
+					</TabsContent>
+
+					<TabsContent value='system' className='mt-5'>
+						<SystemManagement groups={groups} mentors={mentors} tutors={tutors} />
 					</TabsContent>
 				</Tabs>
 			</div>

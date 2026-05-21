@@ -1,6 +1,6 @@
 import { ThemeToggle } from '@/components/shared/theme-toggle'
-import { buttonVariants } from '@/components/ui/button'
-import { ArrowRight, BookOpen, Trophy } from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button-variants'
+import { ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 

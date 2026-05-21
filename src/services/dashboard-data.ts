@@ -1,5 +1,5 @@
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getCachedServerSession } from '@/lib/session'
 import { calculateGrantScore, toGrantKpiInput } from '@/services/grant-engine'
 import type { AppRole } from '@/types/auth'
 import type {
@@ -7,7 +7,6 @@ import type {
 	StudentDashboardSnapshot,
 } from '@/types/grant'
 import type { Prisma } from '@prisma/client'
-import { getServerSession } from 'next-auth'
 
 const latestScoreOrder = { calculatedAt: 'desc' } as const
 
@@ -69,7 +68,7 @@ function assertRole(role: AppRole | undefined, allowedRoles: AppRole[]) {
 }
 
 async function getSessionUser() {
-	const session = await getServerSession(authOptions)
+	const session = await getCachedServerSession()
 	return session?.user ?? null
 }
 

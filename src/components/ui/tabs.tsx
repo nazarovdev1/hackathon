@@ -2,18 +2,35 @@
 
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
 import { cva, type VariantProps } from "class-variance-authority"
+import { useEffect, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
 function Tabs({
   className,
   orientation = "horizontal",
+  defaultValue,
+  value,
+  onValueChange,
   ...props
 }: TabsPrimitive.Root.Props) {
+  const [internalValue, setInternalValue] = useState(defaultValue)
+
+  useEffect(() => {
+    if (value === undefined) {
+      setInternalValue(defaultValue)
+    }
+  }, [defaultValue, value])
+
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
       data-orientation={orientation}
+      value={value ?? internalValue}
+      onValueChange={(nextValue, event) => {
+        if (value === undefined) setInternalValue(nextValue)
+        onValueChange?.(nextValue, event)
+      }}
       className={cn(
         "group/tabs flex gap-2 data-horizontal:flex-col",
         className

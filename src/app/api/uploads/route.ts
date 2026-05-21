@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { authOptions } from '@/lib/auth'
 import fs from 'fs'
 import { getServerSession } from 'next-auth'

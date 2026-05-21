@@ -1,10 +1,2 @@
-'use server'
-
-import { signOut } from 'next-auth/react'
-
-export async function handleSignOut() {
-	await signOut({
-		redirect: true,
-		callbackUrl: '/',
-	})
-}
+// This file is unused. Client-side logout is handled directly in components/auth/logout-button.tsx
+export {}

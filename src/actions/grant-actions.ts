@@ -104,21 +104,108 @@ function revalidateDashboards() {
 	revalidatePath('/dashboard/student/rating')
 }
 
-// Stub implementations for admin actions that are implemented elsewhere.
-// These exist so UI imports don't fail; implement real logic in services if needed.
-export async function awardAdminBonus(_input: {
+import { getCachedServerSession } from '@/lib/session'
+import { prisma } from '@/lib/prisma'
+
+export async function awardAdminBonus(input: {
 	studentId: string
 	score: number
 	reason: string
 }) {
-	void _input
-	throw new Error('awardAdminBonus is not implemented on this environment')
+	const session = await getCachedServerSession()
+	if (!session || session.user.role !== 'ADMIN') {
+		throw new Error('Unauthorized')
+	}
+
+	const score = Number(input.score)
+	if (isNaN(score) || score < 0.5 || score > 20) {
+		throw new Error("Bonus ball 0.5 va 20 oralig'ida bo'lishi kerak.")
+	}
+
+	await prisma.$transaction(async tx => {
+		await tx.adminScoreAdjustment.create({
+			data: {
+				studentId: input.studentId,
+				adminId: session.user.id,
+				score: score,
+				reason: input.reason,
+			}
+		})
+
+		const record = await tx.scoreRecord.findFirst({
+			where: { studentId: input.studentId },
+			orderBy: { calculatedAt: 'desc' },
+		})
+
+		if (record) {
+			const next = {
+				academic: Number(record.academicScore),
+				attendance: Number(record.attendanceScore),
+				assignment: Number(record.assignmentScore),
+				activity: Number(record.activityScore),
+				tutor: Number(record.tutorScore),
+				discipline: Number(record.disciplineScore),
+				penalty: Number(record.penaltyScore),
+				recovery: Number(record.recoveryScore),
+				employmentBonus: Number(record.employmentBonus),
+				adminBonus: score,
+				academicPercent: Number(record.academicPercent),
+			}
+			const { calculateGrantScore } = await import('@/services/grant-engine')
+			const grant = calculateGrantScore(next)
+
+			await tx.scoreRecord.update({
+				where: { id: record.id },
+				data: {
+					adminBonusScore: score,
+					mainKpi: grant.mainKpi,
+					finalScore: grant.finalScore,
+					grantStatus: grant.grantStatus,
+					riskLevel: grant.riskLevel,
+				}
+			})
+		}
+	})
+
+	revalidateDashboards()
+	return { success: true }
 }
 
-export async function expelStudent(_input: {
+export async function expelStudent(input: {
 	studentId: string
 	reason?: string
 }) {
-	void _input
-	throw new Error('expelStudent is not implemented on this environment')
+	const session = await getCachedServerSession()
+	if (!session || session.user.role !== 'ADMIN') {
+		throw new Error('Unauthorized')
+	}
+
+	await prisma.$transaction(async tx => {
+		const student = await tx.studentProfile.findUnique({
+			where: { id: input.studentId },
+			select: { userId: true }
+		})
+
+		if (!student) {
+			throw new Error('Talaba topilmadi.')
+		}
+
+		await tx.studentProfile.update({
+			where: { id: input.studentId },
+			data: {
+				status: 'EXPELLED',
+				statusReason: input.reason || "O'qishdan chetlashtirildi",
+				statusChangedAt: new Date(),
+				statusChangedById: session.user.id,
+			}
+		})
+
+		await tx.user.update({
+			where: { id: student.userId },
+			data: { isActive: false }
+		})
+	})
+
+	revalidateDashboards()
+	return { success: true }
 }

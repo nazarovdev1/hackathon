@@ -12,10 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { getCachedServerSession } from '@/lib/session'
 import { Menu, Search, Settings, User } from 'lucide-react'
-import { getServerSession } from 'next-auth'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -37,22 +35,11 @@ export async function DashboardShell({
 	title: string
 	eyebrow: string
 }) {
-	const session = await getServerSession(authOptions)
+	const session = await getCachedServerSession()
 	const role = session?.user?.role || 'STUDENT'
 	const userName = session?.user?.name || 'Foydalanuvchi'
 	const userEmail = session?.user?.email || ''
 	const avatarUrl = session?.user?.image
-
-	let studentInfo: { group: string; faculty: string } | null = null
-	if (session?.user?.studentProfileId) {
-		const profile = await prisma.studentProfile.findUnique({
-			where: { id: session.user.studentProfileId },
-			select: { groupName: true, faculty: true },
-		})
-		if (profile) {
-			studentInfo = { group: profile.groupName, faculty: profile.faculty }
-		}
-	}
 
 	const userMenu = (
 		<DropdownMenuContent align='end' className='w-56'>
@@ -132,7 +119,7 @@ export async function DashboardShell({
 									<div className='min-w-0 flex-1'>
 										<p className='truncate text-sm font-medium'>{userName}</p>
 										<p className='truncate text-xs text-muted-foreground'>
-											{studentInfo ? studentInfo.group : role}
+											{role}
 										</p>
 									</div>
 								</button>

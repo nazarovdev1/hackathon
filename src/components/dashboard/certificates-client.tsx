@@ -239,7 +239,7 @@ export function CertificatesClient({
 			setEditingId(null)
 			setEditFile(null)
 			setTimeout(() => setToastMessage(null), 3000)
-		} catch (err) {
+		} catch {
 			setToastMessage('Yangilashda xatolik yuz berdi')
 		} finally {
 			setEditSubmitting(false)

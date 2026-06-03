@@ -1,7 +1,9 @@
 const isProd = process.env.NODE_ENV === "production";
 const secret = process.env.NEXTAUTH_SECRET;
 
-if (isProd && !secret) {
+const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+
+if (isProd && !secret && !isBuildPhase) {
   throw new Error("Security Alert: NEXTAUTH_SECRET is not configured.");
 }
 
